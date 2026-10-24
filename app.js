@@ -7,6 +7,7 @@
 // Globals & Helpers
 // ============================================================
 let DATA = null;
+let AI_DATA = null;
 
 const fmt = (n, decimals = 0) => {
     if (n == null || isNaN(n)) return '—';
@@ -91,7 +92,7 @@ function kpiCard(label, value, sub, color) {
 function buildTable(headers, rows, opts = {}) {
     const thClass = 'bg-surface-elevated text-gray-400 font-semibold text-[0.73rem] uppercase tracking-widest px-3.5 py-2.5 text-left border-b border-border-medium whitespace-nowrap sticky top-0';
     const tdClass = 'px-3.5 py-2.5 border-b border-border-subtle whitespace-nowrap text-[0.83rem]';
-    
+
     let html = `<table class="w-full border-collapse text-[0.83rem]"><thead><tr>`;
     headers.forEach((h, i) => {
         const align = opts.alignRight?.includes(i) ? ' text-right' : '';
@@ -120,7 +121,14 @@ function initNav() {
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
 
-    const titles = { dashboard: 'Dashboard', reconciliation: 'Reconciliation Report', savings: 'Savings Model', executive: 'Executive Summary' };
+    const titles = {
+        upload: 'Upload Data',
+        dashboard: 'Dashboard',
+        reconciliation: 'Reconciliation Report',
+        savings: 'Savings Model',
+        'ai-insights': 'AI Insights & Audit',
+        executive: 'Executive Summary'
+    };
 
     links.forEach(link => {
         link.addEventListener('click', e => {
@@ -131,6 +139,9 @@ function initNav() {
             sections.forEach(s => { s.classList.add('hidden'); s.classList.remove('block'); });
             const target = document.getElementById(`section-${sec}`);
             if (target) { target.classList.remove('hidden'); target.classList.add('block'); }
+            if (sec === 'ai-insights' && window.AI_DATA && typeof renderAINarratives === 'function') {
+                renderAINarratives(window.AI_DATA);
+            }
             title.textContent = titles[sec] || 'Dashboard';
             sidebar.removeAttribute('data-open');
         });
@@ -148,6 +159,10 @@ function initNav() {
 function renderDashboard() {
     const gA = DATA.overview.gatewayA;
     const gB = DATA.overview.gatewayB;
+
+    // Update period in sidebar
+    const periodEl = document.getElementById('period-label');
+    if (periodEl && DATA.period) periodEl.textContent = DATA.period;
 
     // KPIs
     const totalVolume = gA.total_volume + gB.total_volume;
@@ -560,10 +575,10 @@ function drawTimeseries(granularity) {
     const rateTitle = document.getElementById('tsTitleRate');
     const settleTitle = document.getElementById('tsTitleSettle');
     const tableTitle = document.getElementById('tsTitleTable');
-    if (volTitle)   volTitle.textContent = `${periodLabel}ly Volume Trend`;
-    if (rateTitle)  rateTitle.textContent = `${periodLabel}ly Effective Rate Trend`;
+    if (volTitle) volTitle.textContent = `${periodLabel}ly Volume Trend`;
+    if (rateTitle) rateTitle.textContent = `${periodLabel}ly Effective Rate Trend`;
     if (settleTitle) settleTitle.textContent = `${periodLabel}ly Settlement Days`;
-    if (tableTitle)  tableTitle.textContent = `${periodLabel}-by-${periodLabel} Breakdown`;
+    if (tableTitle) tableTitle.textContent = `${periodLabel}-by-${periodLabel} Breakdown`;
 
     // Destroy old chart instances before recreating
     ['chartWeeklyVolume', 'chartWeeklyRate', 'chartWeeklySettle'].forEach(id => {
@@ -666,7 +681,7 @@ function renderFXAnalysis() {
                     Gateway A — International by Currency
                 </h4>
                 <div class="overflow-x-auto rounded-lg">
-                    ${fxACurrRows.length ? buildTable(['Currency','INR Volume','Charges','Eff Rate','Txns'], fxACurrRows, {alignRight:[1,2,3,4]}) : '<p class="text-gray-500 text-sm">No international transactions</p>'}
+                    ${fxACurrRows.length ? buildTable(['Currency', 'INR Volume', 'Charges', 'Eff Rate', 'Txns'], fxACurrRows, { alignRight: [1, 2, 3, 4] }) : '<p class="text-gray-500 text-sm">No international transactions</p>'}
                 </div>
             </div>
             <div>
@@ -675,7 +690,7 @@ function renderFXAnalysis() {
                     Gateway B — International by Country (Top 10)
                 </h4>
                 <div class="overflow-x-auto rounded-lg">
-                    ${fxBCountryRows.length ? buildTable(['Country','INR Volume','Charges','Eff Rate','Txns'], fxBCountryRows, {alignRight:[1,2,3,4]}) : '<p class="text-gray-500 text-sm">No international transactions</p>'}
+                    ${fxBCountryRows.length ? buildTable(['Country', 'INR Volume', 'Charges', 'Eff Rate', 'Txns'], fxBCountryRows, { alignRight: [1, 2, 3, 4] }) : '<p class="text-gray-500 text-sm">No international transactions</p>'}
                 </div>
             </div>
         </div>`;
@@ -695,7 +710,7 @@ function renderRenegotiation() {
     // Action summary cards
     const summaryCards = (reco.summary || []).map((s, i) => `
         <div class="flex gap-3 bg-surface-card border border-border-subtle rounded-xl p-4 hover:border-border-medium transition-all">
-            <div class="w-7 h-7 rounded-full bg-emerald-400/10 text-emerald-400 text-[0.75rem] font-bold flex items-center justify-center shrink-0">${i+1}</div>
+            <div class="w-7 h-7 rounded-full bg-emerald-400/10 text-emerald-400 text-[0.75rem] font-bold flex items-center justify-center shrink-0">${i + 1}</div>
             <p class="text-[0.83rem] text-gray-400 leading-relaxed">${s.replace(/^[0-9]+\.\s*/, '')}</p>
         </div>`).join('');
 
@@ -737,31 +752,289 @@ function renderRenegotiation() {
             <div>
                 <h4 class="text-[0.88rem] font-semibold text-gray-300 mb-3">Overcharges by Category</h4>
                 <div class="overflow-x-auto rounded-lg">
-                    ${catRows.length ? buildTable(['Category','Count','Volume','Contracted %','Actual %','Overcharge'], catRows, {alignRight:[1,2,3,4,5]}) : '<p class="text-gray-500 text-sm">No overcharges found</p>'}
+                    ${catRows.length ? buildTable(['Category', 'Count', 'Volume', 'Contracted %', 'Actual %', 'Overcharge'], catRows, { alignRight: [1, 2, 3, 4, 5] }) : '<p class="text-gray-500 text-sm">No overcharges found</p>'}
                 </div>
             </div>
             <div>
                 <h4 class="text-[0.88rem] font-semibold text-gray-300 mb-3">Overcharges by Card Network</h4>
                 <div class="overflow-x-auto rounded-lg">
-                    ${netRows.length ? buildTable(['Network','Count','Total Overcharge','Avg Actual Rate'], netRows, {alignRight:[1,2,3]}) : '<p class="text-gray-500 text-sm">No overcharges found</p>'}
+                    ${netRows.length ? buildTable(['Network', 'Count', 'Total Overcharge', 'Avg Actual Rate'], netRows, { alignRight: [1, 2, 3] }) : '<p class="text-gray-500 text-sm">No overcharges found</p>'}
                 </div>
             </div>
         </div>`;
 }
 
 // ============================================================
-// Init
+// AI Narratives Renderer
 // ============================================================
-async function init() {
-    initNav();
-    try {
-        const res = await fetch('dashboard_data.json');
-        DATA = await res.json();
-    } catch (e) {
-        document.getElementById('kpiGrid').innerHTML = `<div class="col-span-full bg-red-400/10 border border-red-400/30 rounded-xl p-6 text-red-400">Failed to load data. Run <code class="bg-red-400/10 px-2 py-0.5 rounded">py process_data.py</code> first.</div>`;
-        console.error(e);
-        return;
+function renderAINarratives(aiData) {
+    if (aiData) {
+        AI_DATA = aiData;
+        window.AI_DATA = aiData;
+    } else if (window.AI_DATA) {
+        AI_DATA = window.AI_DATA;
     }
+    if (!AI_DATA || !AI_DATA.sections) return;
+
+    const exec = AI_DATA.sections.executive_briefing || {};
+    const oc = AI_DATA.sections.overcharge_investigation || {};
+    const route = AI_DATA.sections.smart_routing_strategy || {};
+    const fx = AI_DATA.sections.fx_and_treasury_audit || {};
+    const modelUsed = AI_DATA.model || 'Gemini 3.5 Flash-Lite';
+
+    // 1. Dashboard Banner
+    const dbEl = document.getElementById('aiDashboardBanner');
+    if (dbEl && exec.headline) {
+        const findingsBadges = (exec.key_findings || []).map(f => {
+            const badgeColor = f.impact?.toLowerCase() === 'high' ? 'bg-red-400/10 text-red-400 border-red-400/30' : 'bg-yellow-400/10 text-yellow-400 border-yellow-400/30';
+            return `
+                <div class="p-3 bg-surface border border-border-subtle rounded-lg">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[0.72rem] font-semibold text-gray-400 uppercase tracking-wider">${f.metric}</span>
+                        <span class="text-[0.65rem] font-bold uppercase px-1.5 py-0.5 rounded border ${badgeColor}">${f.impact} Impact</span>
+                    </div>
+                    <div class="text-[0.82rem] text-gray-200">${f.finding}</div>
+                </div>
+            `;
+        }).join('');
+
+        dbEl.innerHTML = `
+            <div class="p-6 bg-gradient-to-r from-emerald-950/40 via-surface-card to-blue-950/30 border border-emerald-500/30 rounded-xl relative overflow-hidden shadow-lg">
+                <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <h3 class="text-[0.98rem] font-bold text-gray-100 tracking-tight flex items-center gap-2">
+                            AI Executive Briefing
+                        </h3>
+                    </div>
+                    <a href="#ai-insights" onclick="document.querySelector('[data-section=\\'ai-insights\\']')?.click()" class="text-[0.78rem] text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1 transition-colors">
+                        Explore Full AI Audit & Dispute Letter &rarr;
+                    </a>
+                </div>
+                <h4 class="text-[1.05rem] font-semibold text-emerald-300 mb-2">${exec.headline}</h4>
+                <p class="text-[0.85rem] text-gray-300 leading-relaxed mb-4">${exec.plain_english_summary}</p>
+                <div class="grid grid-cols-3 gap-3 max-md:grid-cols-1">
+                    ${findingsBadges}
+                </div>
+            </div>
+        `;
+    }
+
+    // 2. Reconciliation Banner (Overcharge Explanation & Next Steps)
+    const reconEl = document.getElementById('aiReconBanner');
+    if (reconEl && oc.plain_english_explanation) {
+        const evidenceCards = (oc.evidence_summary || []).map(e => `
+            <div class="p-2.5 bg-surface/70 border border-border-subtle rounded-lg text-xs">
+                <span class="block text-gray-400 font-medium mb-0.5">${e.label}</span>
+                <span class="block text-gray-200 font-semibold">${e.detail}</span>
+            </div>
+        `).join('');
+
+        const stepsList = (oc.recommended_investigation_steps || []).map((step, idx) => `
+            <li class="flex items-start gap-2 text-[0.82rem] text-gray-300">
+                <span class="w-5 h-5 rounded-full bg-red-400/10 text-red-400 flex items-center justify-center shrink-0 text-[0.7rem] font-bold mt-0.5">${idx + 1}</span>
+                <span>${step}</span>
+            </li>
+        `).join('');
+
+        reconEl.innerHTML = `
+            <div class="p-6 bg-surface-card border border-red-500/30 rounded-xl mb-5 shadow-lg relative">
+                <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[0.68rem] font-bold uppercase tracking-wider bg-red-400/15 text-red-400 border border-red-400/30">AI Investigation</span>
+                        <h3 class="text-[1.02rem] font-bold text-gray-100">${oc.title || 'Overcharge & Tariff Violation Audit'}</h3>
+                    </div>
+                    <span class="text-[0.72rem] text-gray-500 font-mono">Analyzed by ${modelUsed}</span>
+                </div>
+                <div class="mb-4">
+                    <h5 class="text-[0.78rem] font-semibold text-gray-400 uppercase tracking-wider mb-1">Plain-English Finding Explanation</h5>
+                    <p class="text-[0.86rem] text-gray-200 leading-relaxed">${oc.plain_english_explanation}</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4 max-lg:grid-cols-1">
+                    <div class="p-4 bg-surface border border-border-subtle rounded-lg">
+                        <h5 class="text-[0.78rem] font-semibold text-yellow-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Root-Cause Analysis
+                        </h5>
+                        <p class="text-[0.82rem] text-gray-300 leading-relaxed">${oc.root_cause_analysis}</p>
+                    </div>
+                    <div class="p-4 bg-surface border border-border-subtle rounded-lg">
+                        <h5 class="text-[0.78rem] font-semibold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                            Finance Team Action Plan
+                        </h5>
+                        <ul class="space-y-2 list-none p-0">${stepsList}</ul>
+                    </div>
+                </div>
+
+                ${evidenceCards ? `
+                <div class="mb-4">
+                    <h5 class="text-[0.74rem] font-semibold text-gray-400 uppercase tracking-wider mb-2">Supporting Reconciliation Evidence</h5>
+                    <div class="grid grid-cols-4 gap-2.5 max-md:grid-cols-2">${evidenceCards}</div>
+                </div>` : ''}
+
+                ${oc.dispute_email_draft ? `
+                <div class="mt-4 pt-4 border-t border-border-subtle">
+                    <details class="group bg-surface/50 border border-border-medium rounded-lg transition-all">
+                        <summary class="px-4 py-3 cursor-pointer text-[0.84rem] font-semibold text-gray-200 flex items-center justify-between hover:text-emerald-400">
+                            <span class="flex items-center gap-2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                Ready-to-Send Gateway Dispute Letter Draft (Click to Expand)
+                            </span>
+                            <span class="text-xs text-gray-500 group-open:rotate-180 transition-transform">&darr;</span>
+                        </summary>
+                        <div class="p-4 border-t border-border-subtle text-xs space-y-3">
+                            <div class="flex justify-between items-center text-gray-400 pb-2 border-b border-border-subtle">
+                                <div><strong>To:</strong> ${oc.dispute_email_draft.recipient || 'Gateway A Merchant Support'}</div>
+                                <button onclick="copyDisputeEmail()" id="btnCopyEmail" class="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded hover:bg-emerald-500/30 font-medium transition-all">
+                                    Copy Letter to Clipboard
+                                </button>
+                            </div>
+                            <div class="text-gray-300"><strong>Subject:</strong> <span id="disputeEmailSubject">${oc.dispute_email_draft.subject}</span></div>
+                            <pre id="disputeEmailBody" class="font-sans whitespace-pre-wrap text-[0.82rem] text-gray-300 bg-surface-card p-3 rounded border border-border-subtle leading-relaxed">${oc.dispute_email_draft.body}</pre>
+                        </div>
+                    </details>
+                </div>` : ''}
+            </div>
+        `;
+    }
+
+    // 3. Savings Model Banner
+    const savEl = document.getElementById('aiSavingsBanner');
+    if (savEl && route.plain_english_explanation) {
+        const roadmapItems = (route.implementation_roadmap || []).map(r => `
+            <div class="p-3 bg-surface border border-border-subtle rounded-lg">
+                <div class="text-[0.74rem] font-bold text-emerald-400 uppercase tracking-wider mb-1">${r.phase}</div>
+                <div class="text-[0.82rem] text-gray-300 leading-relaxed">${r.actions}</div>
+            </div>
+        `).join('');
+
+        savEl.innerHTML = `
+            <div class="p-6 bg-surface-card border border-emerald-500/30 rounded-xl mb-5 shadow-lg">
+                <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[0.68rem] font-bold uppercase tracking-wider bg-emerald-400/15 text-emerald-400 border border-emerald-400/30">AI Strategy</span>
+                        <h3 class="text-[1.02rem] font-bold text-gray-100">${route.title || 'Smart Gateway Routing Arbitrage'}</h3>
+                    </div>
+                    <span class="text-[0.72rem] text-emerald-400 font-bold">Potential: ₹8.51L / month</span>
+                </div>
+                <p class="text-[0.86rem] text-gray-200 leading-relaxed mb-4">${route.plain_english_explanation}</p>
+                <div class="p-4 bg-surface border border-border-subtle rounded-lg mb-4">
+                    <h5 class="text-[0.78rem] font-semibold text-yellow-400 uppercase tracking-wider mb-1">Operational Trade-offs & Failure Risk Analysis</h5>
+                    <p class="text-[0.82rem] text-gray-300 leading-relaxed">${route.root_cause_and_tradeoffs}</p>
+                </div>
+                ${roadmapItems ? `
+                <div>
+                    <h5 class="text-[0.74rem] font-semibold text-gray-400 uppercase tracking-wider mb-2">Phased Execution Roadmap</h5>
+                    <div class="grid grid-cols-3 gap-3 max-md:grid-cols-1">${roadmapItems}</div>
+                </div>` : ''}
+            </div>
+        `;
+    }
+
+    // 4. Dedicated AI Insights & Audit Section
+    const fullAuditEl = document.getElementById('aiFullAuditContainer');
+    if (fullAuditEl) {
+        const stratRecs = (exec.strategic_recommendations || []).map(s => `
+            <div class="p-4 bg-surface-card border border-border-subtle rounded-xl flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-emerald-400/15 text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">#${s.priority}</span>
+                <div class="flex-1">
+                    <div class="text-[0.9rem] font-semibold text-gray-100 mb-1">${s.action}</div>
+                    <div class="text-[0.82rem] text-gray-400 leading-relaxed mb-2">${s.rationale}</div>
+                    <div class="text-[0.75rem] font-mono font-medium text-emerald-400 bg-emerald-400/10 inline-block px-2 py-0.5 rounded">Benefit: ${s.financial_benefit}</div>
+                </div>
+            </div>
+        `).join('');
+
+        const treasuryRecs = (fx.recommended_treasury_actions || []).map((t, idx) => `
+            <li class="flex items-start gap-2 text-[0.82rem] text-gray-300">
+                <span class="w-5 h-5 rounded-full bg-blue-400/10 text-blue-400 flex items-center justify-center shrink-0 text-[0.7rem] font-bold mt-0.5">${idx + 1}</span>
+                <span>${t}</span>
+            </li>
+        `).join('');
+
+        fullAuditEl.innerHTML = `
+            <div class="mb-6 flex items-center justify-between flex-wrap gap-4 pb-4 border-b border-border-subtle">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="px-2 py-0.5 rounded text-[0.7rem] font-bold uppercase tracking-wider bg-emerald-400/15 text-emerald-400 border border-emerald-400/30">AI Financial Audit</span>
+                        <span class="text-[0.75rem] text-gray-400 font-mono">Generated: ${new Date(AI_DATA.generated_at).toLocaleString('en-IN')}</span>
+                    </div>
+                    <h2 class="text-xl font-bold tracking-tight text-gray-100">LLM-Driven Payment & Tax Intelligence Audit</h2>
+                    <p class="text-[0.85rem] text-gray-400 mt-1">Plain-English diagnostic narratives, root-cause deductions, and dispute recovery workflows powered by ${modelUsed}.</p>
+                </div>
+                <button onclick="window.print()" class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition-all flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Print Audit Report
+                </button>
+            </div>
+
+            <!-- Executive Summary Card -->
+            <div class="p-6 bg-surface-card border border-border-subtle rounded-xl mb-6 shadow-lg">
+                <h3 class="text-[1.1rem] font-bold text-emerald-400 mb-2">${exec.headline || 'Executive Briefing'}</h3>
+                <p class="text-[0.88rem] text-gray-200 leading-relaxed mb-6">${exec.plain_english_summary || ''}</p>
+                
+                <h4 class="text-[0.82rem] font-bold text-gray-300 uppercase tracking-wider mb-3">Strategic Priorities for Leadership</h4>
+                <div class="grid grid-cols-1 gap-3 mb-4">${stratRecs}</div>
+            </div>
+
+            <!-- FX & Treasury Float Card -->
+            <div class="p-6 bg-surface-card border border-border-subtle rounded-xl mb-6 shadow-lg">
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                    <h3 class="text-[1.05rem] font-bold text-gray-100 flex items-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5b8af5" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                        ${fx.title || 'Cross-Border FX & Working Capital Velocity Audit'}
+                    </h3>
+                    <span class="text-[0.72rem] text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/20 font-semibold">Treasury Impact</span>
+                </div>
+                <div class="grid grid-cols-2 gap-5 mb-5 max-lg:grid-cols-1">
+                    <div class="p-4 bg-surface border border-border-subtle rounded-lg">
+                        <h5 class="text-[0.78rem] font-semibold text-blue-400 uppercase tracking-wider mb-2">Cross-Border FX Markup Impact</h5>
+                        <p class="text-[0.84rem] text-gray-200 leading-relaxed">${fx.fx_markup_explanation || ''}</p>
+                    </div>
+                    <div class="p-4 bg-surface border border-border-subtle rounded-lg">
+                        <h5 class="text-[0.78rem] font-semibold text-purple-400 uppercase tracking-wider mb-2">Working Capital Float & Liquidity</h5>
+                        <p class="text-[0.84rem] text-gray-200 leading-relaxed">${fx.working_capital_impact || ''}</p>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="text-[0.78rem] font-semibold text-gray-300 uppercase tracking-wider mb-2">Recommended Treasury Actions</h5>
+                    <ul class="space-y-2 list-none p-0">${treasuryRecs}</ul>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function copyDisputeEmail() {
+    const subj = document.getElementById('disputeEmailSubject')?.innerText || '';
+    const body = document.getElementById('disputeEmailBody')?.innerText || '';
+    const fullText = `Subject: ${subj}\n\n${body}`;
+    navigator.clipboard.writeText(fullText).then(() => {
+        const btn = document.getElementById('btnCopyEmail');
+        if (btn) {
+            const orig = btn.innerText;
+            btn.innerText = 'Copied to Clipboard!';
+            btn.classList.add('bg-emerald-500', 'text-black');
+            setTimeout(() => {
+                btn.innerText = orig;
+                btn.classList.remove('bg-emerald-500', 'text-black');
+            }, 2500);
+        }
+    }).catch(err => {
+        alert('Could not copy automatically. Please select and copy manually.');
+    });
+}
+
+// ============================================================
+// Render All Dashboard Data from Memory
+// ============================================================
+function renderAll(data) {
+    if (!data) return;
+    DATA = data;
+    window.DATA = data;
+
     renderDashboard();
     renderTimeseries();
     renderReconciliation();
@@ -769,7 +1042,61 @@ async function init() {
     renderFXAnalysis();
     renderRenegotiation();
     renderExecutive();
+
+    if (window.AI_DATA) {
+        AI_DATA = window.AI_DATA;
+        renderAINarratives();
+    }
 }
 
+function renderEmptyState() {
+    const emptyHtml = `
+        <div style="background:#ffffff;border:2px dashed #cbd5e1;border-radius:14px;padding:48px 24px;text-align:center;margin:20px 0;width:100%;grid-column:1/-1;">
+            <div style="width:48px;height:48px;border-radius:50%;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <h3 style="font-family:var(--f-display);font-size:1.15rem;font-weight:700;color:#0f172a;margin-bottom:8px;">No Dataset Loaded</h3>
+            <p style="font-size:0.85rem;color:#64748b;max-width:440px;margin:0 auto 20px;line-height:1.5;">
+                Data is not loaded from disk. Please select your 4 Excel files in the <strong>Upload Data</strong> tab and click <strong>Process Files</strong> to dynamically compute and view analytics.
+            </p>
+            <button onclick="document.querySelector('[data-section=\\'upload\\']')?.click()" style="padding:10px 24px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
+                Go to Upload Data →
+            </button>
+        </div>
+    `;
+
+    const kpi = document.getElementById('kpiGrid');
+    if (kpi) kpi.innerHTML = emptyHtml;
+    const reconKpi = document.getElementById('reconKpiGrid');
+    if (reconKpi) reconKpi.innerHTML = emptyHtml;
+    const savingsKpi = document.getElementById('savingsKpiGrid');
+    if (savingsKpi) savingsKpi.innerHTML = emptyHtml;
+    const exec = document.getElementById('execSummary');
+    if (exec) exec.innerHTML = emptyHtml;
+    const fullAudit = document.getElementById('aiFullAuditContainer');
+    if (fullAudit) fullAudit.innerHTML = emptyHtml;
+}
+
+async function init() {
+    initNav();
+
+    if (window.DATA) {
+        renderAll(window.DATA);
+    } else {
+        // Start completely empty!
+        renderEmptyState();
+
+        // Default view to the Upload Data section
+        const uploadNav = document.querySelector('[data-section="upload"]');
+        if (uploadNav && (!window.location.hash || window.location.hash === '#dashboard' || window.location.hash === '#upload')) {
+            uploadNav.click();
+        }
+    }
+}
+
+window.renderAll = renderAll;
+window.renderAINarratives = renderAINarratives;
+window.renderEmptyState = renderEmptyState;
 document.addEventListener('DOMContentLoaded', init);
+
 

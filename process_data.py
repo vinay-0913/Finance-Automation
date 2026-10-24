@@ -8,15 +8,56 @@ KEY DESIGN:
   - For effective rate calculation we ALWAYS use the transactions file (everything in INR)
   - Payments file is used for metadata: method, currency, card network, international flag
   - Join key: payments.id == transactions.entity_id (for type='payment')
+
+USAGE:
+  py process_data.py                         # uses default dummy files
+  py process_data.py --gwa-payments PATH \\
+      --gwa-transactions PATH \\
+      --gwa-refunds PATH \\
+      --gwb PATH \\
+      --out-dir DIR
 """
 
+import argparse
 import pandas as pd
 import numpy as np
 import json
 import os
 from datetime import datetime
 
-DATA_DIR = r"d:\Cutemath Automation"
+# ──────────────────────────────────────────────────────────────
+# Argument parsing — supports any file paths; falls back to defaults
+# ──────────────────────────────────────────────────────────────
+_DEFAULT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+parser = argparse.ArgumentParser(description="Process payment gateway Excel files into dashboard_data.json")
+parser.add_argument("--gwa-payments",     default=None, help="Path to GatewayA payments Excel file")
+parser.add_argument("--gwa-transactions", default=None, help="Path to GatewayA transactions Excel file")
+parser.add_argument("--gwa-refunds",      default=None, help="Path to GatewayA refunds Excel file")
+parser.add_argument("--gwb",              default=None, help="Path to GatewayB Excel file")
+parser.add_argument("--gwb-sheet",        default=None, help="GatewayB sheet name (auto-detected if omitted)")
+parser.add_argument("--out-dir",          default=_DEFAULT_DIR, help="Output directory for dashboard_data.json and ai_narratives.json")
+args = parser.parse_args()
+
+# Resolve file paths — custom or default dummy files
+DATA_DIR     = _DEFAULT_DIR
+FILE_GWA_PAY = args.gwa_payments     or os.path.join(DATA_DIR, "GatewayA_payments_Sep26_dummy.xlsx")
+FILE_GWA_TXN = args.gwa_transactions or os.path.join(DATA_DIR, "GatewayA_transactions_Sep26_dummy.xlsx")
+FILE_GWA_REF = args.gwa_refunds      or os.path.join(DATA_DIR, "GatewayA_refunds_Sep26_dummy.xlsx")
+FILE_GWB     = args.gwb              or os.path.join(DATA_DIR, "GatewayB_Sep26_dummy.xlsx")
+OUT_DIR      = args.out_dir
+
+print("=== PayAnalytics Data Processor ===")
+print(f"GatewayA Payments:     {FILE_GWA_PAY}")
+print(f"GatewayA Transactions: {FILE_GWA_TXN}")
+print(f"GatewayA Refunds:      {FILE_GWA_REF}")
+print(f"GatewayB:              {FILE_GWB}")
+print(f"Output dir:            {OUT_DIR}\n")
+
+for _f in [FILE_GWA_PAY, FILE_GWA_TXN, FILE_GWA_REF, FILE_GWB]:
+    if not os.path.exists(_f):
+        raise FileNotFoundError(f"File not found: {_f}")
+os.makedirs(OUT_DIR, exist_ok=True)
 
 # ──────────────────────────────────────────────────────────────
 # Helpers
@@ -30,10 +71,15 @@ def summarize(vol, charges, count):
             'count': int(count), 'rate': eff_rate(charges, vol)}
 
 def read_cols(df, col_map):
-    """Select columns by position index and rename them."""
-    result = df.iloc[:, list(col_map.keys())].copy()
-    result.columns = list(col_map.values())
-    return result
+    """Select columns safely by position index, preventing IndexError."""
+    selected = {}
+    num_cols = df.shape[1]
+    for idx, name in col_map.items():
+        if idx < num_cols:
+            selected[name] = df.iloc[:, idx]
+        else:
+            selected[name] = pd.Series([np.nan] * len(df))
+    return pd.DataFrame(selected)
 
 def to_numeric_cols(df, cols):
     """Convert multiple columns to numeric, filling NaN with 0."""
@@ -51,8 +97,7 @@ def to_int_cols(df, cols):
 # Row 1 = blank, Row 2 = headers, Row 3+ = data → header=1
 # ══════════════════════════════════════════════════════════════
 print("Reading GatewayA Payments (metadata)...")
-_raw = pd.read_excel(os.path.join(DATA_DIR, "GatewayA_payments_Sep26_dummy.xlsx"),
-                     sheet_name='Sheet1', header=1, engine='openpyxl')
+_raw = pd.read_excel(FILE_GWA_PAY, sheet_name='Sheet1', header=1, engine='openpyxl')
 df_pay = read_cols(_raw, {
     0:'id', 1:'fx_amount', 2:'currency', 3:'status', 6:'international',
     7:'method', 8:'amount_refunded', 21:'fee_inr', 22:'tax_inr',
@@ -72,8 +117,7 @@ print(f"  {len(df_pay)} payment records")
 # amount = INR (authoritative), fee = INR, tax = INR
 # ══════════════════════════════════════════════════════════════
 print("Reading GatewayA Transactions (INR ledger)...")
-_raw = pd.read_excel(os.path.join(DATA_DIR, "GatewayA_transactions_Sep26_dummy.xlsx"),
-                     sheet_name='Sheet1', header=0, engine='openpyxl')
+_raw = pd.read_excel(FILE_GWA_TXN, sheet_name='Sheet1', header=0, engine='openpyxl')
 df_txn = read_cols(_raw, {
     0:'entity_id', 1:'type', 2:'debit', 3:'credit', 4:'amount_inr',
     5:'currency', 6:'fee_inr', 7:'tax_inr', 8:'on_hold', 9:'settled',
@@ -93,8 +137,7 @@ print(f"  {len(df_txn)} transaction records")
 # Row 1 = blank, Row 2 = headers, Row 3+ = data → header=1
 # ══════════════════════════════════════════════════════════════
 print("Reading GatewayA Refunds...")
-_raw = pd.read_excel(os.path.join(DATA_DIR, "GatewayA_refunds_Sep26_dummy.xlsx"),
-                     sheet_name='Sheet1', header=1, engine='openpyxl')
+_raw = pd.read_excel(FILE_GWA_REF, sheet_name='Sheet1', header=1, engine='openpyxl')
 df_refund = read_cols(_raw, {0:'id', 1:'amount', 2:'currency', 3:'payment_id',
                               6:'created_at', 10:'status'})
 df_refund = df_refund.dropna(subset=['id'])
@@ -108,8 +151,16 @@ print(f"  {len(df_refund)} refund records")
 # Row 1 = blank, Row 2 = headers, Row 3+ = data → header=1
 # ══════════════════════════════════════════════════════════════
 print("Reading GatewayB...")
-_raw = pd.read_excel(os.path.join(DATA_DIR, "GatewayB_Sep26_dummy.xlsx"),
-                     sheet_name="GatewayB Sep'26", header=1, engine='openpyxl')
+# Auto-detect GatewayB sheet: use --gwb-sheet if given, else pick the first non-empty sheet
+_gwb_xl = pd.ExcelFile(FILE_GWB, engine='openpyxl')
+if args.gwb_sheet and args.gwb_sheet in _gwb_xl.sheet_names:
+    _gwb_sheet = args.gwb_sheet
+else:
+    # prefer sheets containing 'gateway' in name, else first sheet
+    _preferred = [s for s in _gwb_xl.sheet_names if 'gateway' in s.lower()]
+    _gwb_sheet = _preferred[0] if _preferred else _gwb_xl.sheet_names[0]
+print(f"  Using GatewayB sheet: '{_gwb_sheet}'")
+_raw = pd.read_excel(FILE_GWB, sheet_name=_gwb_sheet, header=1, engine='openpyxl')
 df_gwb = read_cols(_raw, {
     0:'balance_transaction_id', 2:'created', 4:'available_on', 5:'currency',
     6:'gross', 7:'fee', 8:'net', 9:'reporting_category', 10:'source_id',
@@ -604,8 +655,24 @@ refund_items = [{
     'status': r['status'],
 } for _, r in df_refund.iterrows()]
 
+# Compute dynamic date period from actual data
+all_dates = pd.concat([
+    pd.to_datetime(df_txn['created_at'], errors='coerce'),
+    pd.to_datetime(df_gwb['created'], errors='coerce')
+]).dropna()
+
+if len(all_dates) > 0:
+    min_d = all_dates.min()
+    max_d = all_dates.max()
+    if min_d.month == max_d.month and min_d.year == max_d.year:
+        dynamic_period = min_d.strftime('%B %Y')
+    else:
+        dynamic_period = f"{min_d.strftime('%b %Y')} – {max_d.strftime('%b %Y')}"
+else:
+    dynamic_period = 'Current Period'
+
 dashboard_data = {
-    'period':       'September 2026',
+    'period':       dynamic_period,
     'generated_at': datetime.now().isoformat(),
 
     'overview': {
@@ -725,7 +792,7 @@ dashboard_data = {
 }
 
 # Write output
-out_path = os.path.join(DATA_DIR, 'dashboard_data.json')
+out_path = os.path.join(OUT_DIR, 'dashboard_data.json')
 with open(out_path, 'w', encoding='utf-8') as f:
     json.dump(dashboard_data, f, indent=2, default=str)
 

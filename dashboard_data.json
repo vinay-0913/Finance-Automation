@@ -1,6 +1,6 @@
 {
-  "period": "September 2026",
-  "generated_at": "2026-10-22T23:33:31.104227",
+  "period": "Aug 2026 \u2013 Sep 2026",
+  "generated_at": "2026-10-24T20:16:39.923647",
   "overview": {
     "gatewayA": {
       "name": "Gateway A",
@@ -368,28 +368,6 @@
     }
   },
   "by_card_network": {
-    "RuPay": {
-      "gatewayA": {
-        "volume": 315600.0,
-        "count": 6,
-        "charges": 3862.93,
-        "rate": 1.22
-      }
-    },
-    "MasterCard": {
-      "gatewayA": {
-        "volume": 6650687.86,
-        "count": 112,
-        "charges": 137673.43,
-        "rate": 2.07
-      },
-      "gatewayB": {
-        "volume": 6123615.5,
-        "count": 164,
-        "charges": 395053.96,
-        "rate": 6.45
-      }
-    },
     "American Express": {
       "gatewayA": {
         "volume": 1622468.56,
@@ -402,6 +380,30 @@
         "count": 43,
         "charges": 80255.42,
         "rate": 6.13
+      }
+    },
+    "Other": {
+      "gatewayA": {
+        "volume": 1648.0,
+        "count": 2,
+        "charges": 13.6,
+        "rate": 0.83
+      }
+    },
+    "RuPay": {
+      "gatewayA": {
+        "volume": 315600.0,
+        "count": 6,
+        "charges": 3862.93,
+        "rate": 1.22
+      }
+    },
+    "Diners Club": {
+      "gatewayA": {
+        "volume": 416692.41,
+        "count": 8,
+        "charges": 8683.47,
+        "rate": 2.08
       }
     },
     "Visa": {
@@ -418,20 +420,18 @@
         "rate": 6.57
       }
     },
-    "Diners Club": {
+    "MasterCard": {
       "gatewayA": {
-        "volume": 416692.41,
-        "count": 8,
-        "charges": 8683.47,
-        "rate": 2.08
-      }
-    },
-    "Other": {
-      "gatewayA": {
-        "volume": 1648.0,
-        "count": 2,
-        "charges": 13.6,
-        "rate": 0.83
+        "volume": 6650687.86,
+        "count": 112,
+        "charges": 137673.43,
+        "rate": 2.07
+      },
+      "gatewayB": {
+        "volume": 6123615.5,
+        "count": 164,
+        "charges": 395053.96,
+        "rate": 6.45
       }
     }
   },
