@@ -1,14 +1,12 @@
 """
 server.py — PayAnalytics HTTP Server
-Replaces `npx serve` with a server that:
-  1. Serves all static files (HTML, JS, JSON, etc.)
-  2. POST /api/upload  — receives 4 Excel files, runs process_data.py
-  3. POST /api/narrate — runs ai_narrate.py on the generated dashboard_data.json
-  4. GET  /api/status  — returns current processing status
-
-Usage:
-  py server.py            (port 3000)
-  py server.py --port 8080
+Supports:
+  1. Static file serving (HTML, JS, CSS, JSON, etc.)
+  2. POST /api/inspect — fast file inspection (columns, detected schema role, candidate join keys)
+  3. POST /api/upload  — accepts single consolidated files or multi-file uploads with custom join keys & months
+  4. POST /api/narrate — runs ai_narrate.py on existing dashboard_data.json
+  5. GET  /api/status  — returns pipeline state, progress logs, latest dataset, and AI insights
+  6. GET  /api/latest-data — returns cached dataset & AI narratives
 """
 
 import argparse
@@ -32,7 +30,7 @@ PROCESS_SCRIPT = os.path.join(BASE_DIR, "process_data.py")
 NARRATE_SCRIPT = os.path.join(BASE_DIR, "ai_narrate.py")
 
 # ──────────────────────────────────────────────────────────────
-# Shared processing state (thread-safe enough for single user)
+# Shared processing state
 # ──────────────────────────────────────────────────────────────
 _state = {
     "status": "idle",       # idle | processing | done | error
@@ -52,16 +50,94 @@ def _set_state(status, step="", error=None):
     if step:
         _state["log"].append(step)
 
+def inspect_file(filepath):
+    """Inspects an Excel/CSV file to detect schema role, columns, and candidate join keys."""
+    try:
+        import pandas as pd
+        xl = pd.ExcelFile(filepath, engine='openpyxl')
+        sheet = xl.sheet_names[0]
+        for s in xl.sheet_names:
+            if any(w in s.lower() for w in ['gateway', 'charge', 'txn', 'transaction', 'settlement', 'payment', 'sheet1']):
+                sheet = s
+                break
+        df0 = pd.read_excel(filepath, sheet_name=sheet, header=0, nrows=10, engine='openpyxl')
+        df1 = pd.read_excel(filepath, sheet_name=sheet, header=1, nrows=10, engine='openpyxl')
+        cols0 = [str(c).strip() for c in df0.columns if not str(c).startswith('Unnamed')]
+        cols1 = [str(c).strip() for c in df1.columns if not str(c).startswith('Unnamed')]
+        if len(cols1) > len(cols0):
+            cols = cols1
+            df_sample = df1
+        else:
+            cols = cols0
+            df_sample = df0
+            
+        cols_lower = set(c.lower() for c in cols)
+        fn_lower = os.path.basename(filepath).lower()
+        
+        # 1. Filename keyword priority
+        if 'payment' in fn_lower:
+            role = 'payment_metadata'
+            role_label = 'Payment Metadata'
+        elif 'refund' in fn_lower:
+            role = 'refunds_ledger'
+            role_label = 'Refunds Ledger'
+        elif 'transaction' in fn_lower or 'settle' in fn_lower:
+            role = 'settlement_ledger'
+            role_label = 'Settlement Ledger (INR Amounts)'
+        elif 'gatewayb' in fn_lower or any(k in cols_lower for k in ['balance_transaction_id', 'reporting_category']):
+            role = 'consolidated_ledger'
+            role_label = 'Consolidated Ledger (Standalone Ready)'
+        # 2. Schema-based fallback for arbitrary filenames
+        elif any(k in cols_lower for k in ['balance_transaction_id', 'reporting_category', 'gross']):
+            role = 'consolidated_ledger'
+            role_label = 'Consolidated Ledger (Standalone Ready)'
+        elif any(k in cols_lower for k in ['settled_at', 'tax_inr', 'settlement_id', 'amount_inr']):
+            role = 'settlement_ledger'
+            role_label = 'Settlement Ledger (INR Amounts)'
+        elif any(k in cols_lower for k in ['refund_id']):
+            role = 'refunds_ledger'
+            role_label = 'Refunds Ledger'
+        elif any(k in cols_lower for k in ['fx_amount', 'status', 'international']):
+            role = 'payment_metadata'
+            role_label = 'Payment Metadata'
+        else:
+            role = 'unknown'
+            role_label = 'Custom Financial Data'
+            
+        candidate_id_cols = [c for c in cols if any(term in c.lower() for term in ['id', 'ref', 'arn', 'key', 'token', 'entity'])]
+        sample_ids = {}
+        for c in candidate_id_cols[:6]:
+            vals = [str(v) for v in df_sample[c].dropna().head(3).tolist()]
+            sample_ids[c] = vals
 
-def run_pipeline(files: dict, out_dir: str):
+        return {
+            'name': os.path.basename(filepath),
+            'filename': os.path.basename(filepath),
+            'role': role,
+            'role_label': role_label,
+            'columns': cols,
+            'detected_columns': cols,
+            'candidate_ids': candidate_id_cols,
+            'sample_ids': sample_ids,
+            'size_bytes': os.path.getsize(filepath) if os.path.exists(filepath) else 0
+        }
+    except Exception as e:
+        return {
+            'name': os.path.basename(filepath),
+            'filename': os.path.basename(filepath),
+            'role': 'unknown',
+            'role_label': 'Custom File',
+            'columns': [],
+            'detected_columns': [],
+            'candidate_ids': [],
+            'sample_ids': {},
+            'error': str(e)
+        }
+
+def run_pipeline(files: list, out_dir: str, months: str = None, join_keys: dict = None, gateway_config: dict = None):
     """
-    Run process_data.py (and optionally ai_narrate.py) in a background thread.
-    files = {
-        "gwa_payments": "/path/to/file.xlsx",
-        "gwa_transactions": "/path/to/file.xlsx",
-        "gwa_refunds": "/path/to/file.xlsx",
-        "gwb": "/path/to/file.xlsx",
-    }
+    Executes process_data.py with dynamic files, per-gateway config, join keys, and month scope,
+    then automatically triggers ai_narrate.py for Gemini insights.
     """
     _state["log"] = []
     _state["result_data"] = None
@@ -69,15 +145,20 @@ def run_pipeline(files: dict, out_dir: str):
     _set_state("processing", "Starting data processing...")
 
     try:
-        cmd = [
-            sys.executable, PROCESS_SCRIPT,
-            "--gwa-payments",     files["gwa_payments"],
-            "--gwa-transactions", files["gwa_transactions"],
-            "--gwa-refunds",      files["gwa_refunds"],
-            "--gwb",              files["gwb"],
-            "--out-dir",          out_dir,
-        ]
-        _set_state("processing", "Running process_data.py...")
+        if gateway_config and len(gateway_config.get("gateways", [])) > 0:
+            cfg_path = os.path.join(out_dir, "temp_gw_config.json")
+            with open(cfg_path, "w", encoding="utf-8") as gf:
+                json.dump(gateway_config, gf, indent=2)
+            cmd = [sys.executable, PROCESS_SCRIPT, "--gateway-config", cfg_path, "--out-dir", out_dir]
+        else:
+            cmd = [sys.executable, PROCESS_SCRIPT, "--files"] + files + ["--out-dir", out_dir]
+
+        if months and months.lower() not in ['all', 'auto', '']:
+            cmd += ["--months", months]
+        if join_keys and len(join_keys) > 0:
+            cmd += ["--join-keys", json.dumps(join_keys)]
+
+        _set_state("processing", "Running process_data.py on uploaded files...")
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
         for line in result.stdout.splitlines():
             _state["log"].append(line)
@@ -91,7 +172,7 @@ def run_pipeline(files: dict, out_dir: str):
             with open(json_path, "r", encoding="utf-8") as jf:
                 _state["result_data"] = json.load(jf)
 
-        # Automatically generate AI Insights directly!
+        # Automatically generate AI Insights directly
         _set_state("processing", "Calculations complete. Automatically generating AI insights with Gemini...")
         ai_cmd = [
             sys.executable, NARRATE_SCRIPT,
@@ -116,14 +197,12 @@ def run_pipeline(files: dict, out_dir: str):
     except Exception as e:
         _set_state("error", f"Exception: {e}", error=traceback.format_exc())
 
-
 # ──────────────────────────────────────────────────────────────
 # HTTP Handler
 # ──────────────────────────────────────────────────────────────
 class Handler(http.server.BaseHTTPRequestHandler):
 
     def log_message(self, fmt, *args):
-        # suppress default per-request logs; keep errors
         if args and str(args[1]) >= "400":
             super().log_message(fmt, *args)
 
@@ -162,12 +241,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path.rstrip("/") or "/"
 
-        # API routes
         if path == "/api/status":
             self._send_json({
                 "status": _state["status"],
                 "step": _state["step"],
-                "log": _state["log"][-50:],   # last 50 lines
+                "log": _state["log"][-50:],
                 "error": _state["error"],
                 "last_run": _state["last_run"],
                 "data": _state.get("result_data"),
@@ -198,7 +276,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if path == "/" or path == "/index.html":
             target = os.path.join(BASE_DIR, "index.html")
         else:
-            # Strip leading /
             rel = path.lstrip("/")
             target = os.path.join(BASE_DIR, rel)
 
@@ -213,79 +290,192 @@ class Handler(http.server.BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
-        if path == "/api/upload":
+        if path == "/api/inspect":
+            self._handle_inspect()
+        elif path == "/api/upload":
             self._handle_upload()
         elif path == "/api/narrate":
             self._handle_narrate()
         else:
             self._send_json({"error": "Unknown endpoint"}, 404)
 
+    def _parse_multipart(self):
+        content_type = self.headers.get("Content-Type", "")
+        if "multipart/form-data" not in content_type:
+            return None, None
+        content_length = int(self.headers.get("Content-Length", "0"))
+        body = self.rfile.read(content_length)
+        raw_header = f"Content-Type: {content_type}\r\n\r\n".encode("latin-1")
+        msg = BytesParser(policy=default).parsebytes(raw_header + body)
+
+        files = []
+        fields = {}
+        for part in msg.iter_parts():
+            name = part.get_param("name", header="content-disposition")
+            filename = part.get_filename()
+            payload = part.get_payload(decode=True)
+            if filename:
+                if payload:
+                    files.append((filename, payload))
+            elif name:
+                fields[name] = payload.decode("utf-8", errors="ignore") if payload else ""
+        return files, fields
+
+    def _handle_inspect(self):
+        """Inspects uploaded files and returns schema breakdown & candidate join keys."""
+        files, fields = self._parse_multipart()
+        if not files:
+            self._send_json({"error": "No files received for inspection"}, 400)
+            return
+
+        temp_dir = tempfile.mkdtemp(prefix="payanalytics_inspect_")
+        inspections = []
+        try:
+            for fn, data in files:
+                fpath = os.path.join(temp_dir, fn)
+                with open(fpath, "wb") as f:
+                    f.write(data)
+                inspections.append(inspect_file(fpath))
+
+            roles = [i['role'] for i in inspections]
+            has_consolidated = 'consolidated_ledger' in roles
+            has_settlement = 'settlement_ledger' in roles
+            has_payment = 'payment_metadata' in roles
+
+            needs_mapping = False
+            suggested_mapping = {}
+
+            if has_settlement and has_payment:
+                pay_file = next(i for i in inspections if i['role'] == 'payment_metadata')
+                settle_file = next(i for i in inspections if i['role'] == 'settlement_ledger')
+                
+                # Check candidate overlap
+                p_cands = pay_file['candidate_ids']
+                s_cands = settle_file['candidate_ids']
+                
+                p_cands_lower = [c.lower() for c in p_cands]
+                s_cands_lower = [c.lower() for c in s_cands]
+                exact = [c for c in p_cands if c.lower() in s_cands_lower]
+                if 'id' in p_cands_lower and 'entity_id' in s_cands_lower:
+                    suggested_mapping = {'payment_key': 'id', 'settlement_key': 'entity_id'}
+                elif 'id' in p_cands_lower and 'payment_id' in s_cands_lower:
+                    suggested_mapping = {'payment_key': 'id', 'settlement_key': 'payment_id'}
+                elif exact:
+                    suggested_mapping = {'payment_key': exact[0], 'settlement_key': exact[0]}
+                else:
+                    needs_mapping = True
+                    suggested_mapping = {
+                        'payment_key': p_cands[0] if p_cands else '',
+                        'settlement_key': s_cands[0] if s_cands else ''
+                    }
+
+            mode = 'single_consolidated' if (has_consolidated and len(files) == 1) else ('multi_file_join' if has_settlement else 'custom')
+
+            self._send_json({
+                "ok": True,
+                "files": inspections,
+                "mode": mode,
+                "needs_mapping": needs_mapping,
+                "suggested_mapping": suggested_mapping,
+            })
+        finally:
+            # Clean temp inspection dir
+            try:
+                for fn, _ in files:
+                    fp = os.path.join(temp_dir, fn)
+                    if os.path.exists(fp): os.remove(fp)
+                os.rmdir(temp_dir)
+            except Exception:
+                pass
+
     def _handle_upload(self):
-        """
-        Accepts multipart/form-data with fields:
-          gwa_payments, gwa_transactions, gwa_refunds, gwb
-        Saves files to a temp directory, then kicks off the pipeline.
-        """
+        """Accepts 1 to N files, months, and optional join key mapping."""
         if _state["status"] == "processing":
             self._send_json({"error": "Already processing. Please wait."}, 409)
             return
 
-        content_type = self.headers.get("Content-Type", "")
-        if "multipart/form-data" not in content_type:
-            self._send_json({"error": "Expected multipart/form-data"}, 400)
+        files, fields = self._parse_multipart()
+        if not files or len(files) == 0:
+            self._send_json({"error": "No files provided in upload."}, 400)
             return
 
-        try:
-            content_length = int(self.headers.get("Content-Length", "0"))
-            body = self.rfile.read(content_length)
+        months = fields.get("months") or fields.get("period") or "all"
+        mapping = {}
+        if fields.get("mapping"):
+            try:
+                mapping = json.loads(fields["mapping"])
+            except Exception:
+                pass
 
-            raw_header = f"Content-Type: {content_type}\r\n\r\n".encode("latin-1")
-            msg = BytesParser(policy=default).parsebytes(raw_header + body)
+        # Save files to temp directory
+        upload_dir = tempfile.mkdtemp(prefix="payanalytics_upload_")
+        saved_paths = []
+        for filename, data in files:
+            dest = os.path.join(upload_dir, filename)
+            with open(dest, "wb") as f:
+                f.write(data)
+            saved_paths.append(dest)
 
-            uploaded_parts = {}
-            for part in msg.iter_parts():
-                name = part.get_param("name", header="content-disposition")
-                if name:
-                    filename = part.get_filename() or f"{name}.xlsx"
-                    payload = part.get_payload(decode=True)
-                    if payload is not None and len(payload) > 0:
-                        uploaded_parts[name] = (filename, payload)
+        # Quick validation check: if multiple files, check if mapping is required
+        inspections = [inspect_file(p) for p in saved_paths]
+        roles = [i['role'] for i in inspections]
+        has_settlement = 'settlement_ledger' in roles
+        has_payment = 'payment_metadata' in roles
 
-            required = ["gwa_payments", "gwa_transactions", "gwa_refunds", "gwb"]
-            missing = [k for k in required if k not in uploaded_parts]
-            if missing:
-                self._send_json({"error": f"Missing files: {', '.join(missing)}"}, 400)
+        if has_settlement and has_payment and not mapping:
+            pay_file = next(i for i in inspections if i['role'] == 'payment_metadata')
+            settle_file = next(i for i in inspections if i['role'] == 'settlement_ledger')
+            p_cands = [c.lower() for c in pay_file['candidate_ids']]
+            s_cands = [c.lower() for c in settle_file['candidate_ids']]
+            common = set(p_cands) & set(s_cands)
+            has_standard_pair = ('id' in p_cands and 'entity_id' in s_cands)
+            if not common and not has_standard_pair:
+                self._send_json({
+                    "status": "needs_mapping",
+                    "files": inspections,
+                    "message": "Payment metadata and settlement ledger lack a standard linking identifier. Please map the connecting columns."
+                }, 200)
                 return
 
-            # Save uploaded files to a temp directory
-            upload_dir = tempfile.mkdtemp(prefix="payanalytics_")
-            saved = {}
-            for key in required:
-                filename, data = uploaded_parts[key]
-                dest = os.path.join(upload_dir, filename)
-                with open(dest, "wb") as f:
-                    f.write(data)
-                saved[key] = dest
+        # Resolve gateways_config if passed
+        gateway_config = None
+        gw_config_raw = fields.get("gateways_config")
+        if gw_config_raw:
+            try:
+                parsed_gw_list = json.loads(gw_config_raw)
+                resolved_gateways = []
+                for gw in parsed_gw_list:
+                    gw_name = gw.get("name", "Gateway")
+                    target_names = [fn.lower() for fn in gw.get("file_names", [])]
+                    matched_paths = [p for p in saved_paths if os.path.basename(p).lower() in target_names]
+                    if matched_paths:
+                        resolved_gateways.append({
+                            "name": gw_name,
+                            "files": matched_paths,
+                            "mapping": gw.get("mapping")
+                        })
+                if resolved_gateways:
+                    gateway_config = {"gateways": resolved_gateways}
+            except Exception as e:
+                print(f"[Warning] Failed to parse gateways_config: {e}")
 
-            # Start processing in a background thread
-            t = threading.Thread(
-                target=run_pipeline,
-                args=(saved, BASE_DIR),
-                daemon=True,
-            )
-            t.start()
+        # Start pipeline
+        t = threading.Thread(
+            target=run_pipeline,
+            args=(saved_paths, BASE_DIR, months, mapping, gateway_config),
+            daemon=True,
+        )
+        t.start()
 
-            self._send_json({
-                "ok": True,
-                "message": "Files uploaded. Processing started.",
-                "files": {k: os.path.basename(v) for k, v in saved.items()},
-            })
-
-        except Exception as e:
-            self._send_json({"error": str(e), "trace": traceback.format_exc()}, 500)
+        self._send_json({
+            "ok": True,
+            "message": f"Processing {len(saved_paths)} file(s) for period: {months}.",
+            "files": [os.path.basename(p) for p in saved_paths],
+            "months": months
+        })
 
     def _handle_narrate(self):
-        """Run ai_narrate.py on the existing dashboard_data.json."""
+        """Run ai_narrate.py on existing dashboard_data.json."""
         if _state["status"] == "processing":
             self._send_json({"error": "Already processing. Please wait."}, 409)
             return
@@ -298,54 +488,32 @@ class Handler(http.server.BaseHTTPRequestHandler):
         def _run():
             _set_state("processing", "Running AI narrative generation...")
             try:
-                cmd = [sys.executable, NARRATE_SCRIPT,
-                       "--input", dashboard_path,
-                       "--output", os.path.join(BASE_DIR, "ai_narratives.json")]
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-                for line in result.stdout.splitlines():
+                cmd = [sys.executable, NARRATE_SCRIPT, "--input", dashboard_path, "--output", os.path.join(BASE_DIR, "ai_narratives.json")]
+                res = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+                for line in res.stdout.splitlines():
                     _state["log"].append(line)
-                if result.returncode != 0:
-                    _set_state("error", "ai_narrate.py failed", error=result.stderr)
-                else:
-                    _set_state("done", "AI narratives generated successfully.")
+                ai_path = os.path.join(BASE_DIR, "ai_narratives.json")
+                if os.path.exists(ai_path):
+                    with open(ai_path, "r", encoding="utf-8") as af:
+                        _state["ai_narratives"] = json.load(af)
+                _set_state("done", "AI narratives updated.")
             except Exception as e:
-                _set_state("error", str(e), error=traceback.format_exc())
+                _set_state("error", f"AI narrative error: {e}")
 
         threading.Thread(target=_run, daemon=True).start()
-        self._send_json({"ok": True, "message": "AI narration started."})
+        self._send_json({"ok": True, "message": "AI narrative generation started."})
 
-
-# ──────────────────────────────────────────────────────────────
-# Entry point
-# ──────────────────────────────────────────────────────────────
 def main():
-    ap = argparse.ArgumentParser(description="PayAnalytics HTTP Server")
-    ap.add_argument("--port", type=int, default=3000)
-    ap.add_argument("--host", default="localhost")
-    cfg = ap.parse_args()
+    parser = argparse.ArgumentParser(description="PayAnalytics Server")
+    parser.add_argument("--port", type=int, default=3000, help="Port to listen on (default: 3000)")
+    args = parser.parse_args()
 
-    mimetypes.add_type("application/javascript", ".js")
-    mimetypes.add_type("text/css", ".css")
-
-    http.server.ThreadingHTTPServer.allow_reuse_address = True
-    try:
-        server = http.server.ThreadingHTTPServer((cfg.host, cfg.port), Handler)
-    except OSError as e:
-        print(f"\n[Error] Could not bind to port {cfg.port}: {e}")
-        print(f"If another instance is running, stop it or pass --port <number> (e.g. py server.py --port 3001)\n")
-        sys.exit(1)
-
-    print(f"\n=== PayAnalytics Server ===")
-    print(f"    http://{cfg.host}:{cfg.port}")
-    print(f"    Serving from: {BASE_DIR}")
-    print(f"    Press Ctrl+C to stop\n")
+    server = http.server.ThreadingHTTPServer(("0.0.0.0", args.port), Handler)
+    print(f"PayAnalytics server running on http://localhost:{args.port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nServer stopped.")
-    finally:
-        server.server_close()
-
 
 if __name__ == "__main__":
     main()

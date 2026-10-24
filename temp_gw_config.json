@@ -1,0 +1,23 @@
+{
+  "gateways": [
+    {
+      "name": "Gateway A",
+      "files": [
+        "C:\\Users\\vinay\\AppData\\Local\\Temp\\payanalytics_upload_n2elm1_m\\GatewayA_payments_Sep26_dummy.xlsx",
+        "C:\\Users\\vinay\\AppData\\Local\\Temp\\payanalytics_upload_n2elm1_m\\GatewayA_refunds_Sep26_dummy.xlsx",
+        "C:\\Users\\vinay\\AppData\\Local\\Temp\\payanalytics_upload_n2elm1_m\\GatewayA_transactions_Sep26_dummy.xlsx"
+      ],
+      "mapping": {
+        "payment_key": "id",
+        "settlement_key": "entity_id"
+      }
+    },
+    {
+      "name": "Gateway B",
+      "files": [
+        "C:\\Users\\vinay\\AppData\\Local\\Temp\\payanalytics_upload_n2elm1_m\\GatewayB_Sep26_dummy.xlsx"
+      ],
+      "mapping": {}
+    }
+  ]
+}

@@ -159,32 +159,67 @@ function initNav() {
 function renderDashboard() {
     const gA = DATA.overview.gatewayA;
     const gB = DATA.overview.gatewayB;
+    const hasA = DATA.has_gateway_a !== false && gA && gA.total_volume > 0;
+    const hasB = DATA.has_gateway_b !== false && gB && gB.total_volume > 0;
 
     // Update period in sidebar
     const periodEl = document.getElementById('period-label');
     if (periodEl && DATA.period) periodEl.textContent = DATA.period;
 
     // KPIs
-    const totalVolume = gA.total_volume + gB.total_volume;
-    const totalCharges = gA.total_charges + gB.total_charges;
-    const totalTxns = gA.txn_count + gB.txn_count;
-    const overallRate = (totalCharges / totalVolume * 100);
+    const gwValues = DATA.overview.gateways ? Object.values(DATA.overview.gateways) : [gA, gB].filter(Boolean);
+    const totalVolume = gwValues.reduce((sum, g) => sum + (g?.total_volume || 0), 0);
+    const totalCharges = gwValues.reduce((sum, g) => sum + (g?.total_charges || 0), 0);
+    const totalTxns = gwValues.reduce((sum, g) => sum + (g?.txn_count || 0), 0);
+    const overallRate = totalVolume > 0 ? (totalCharges / totalVolume * 100) : 0;
+
+    const gwCount = gwValues.filter(g => (g?.total_volume || 0) > 0).length;
+    let scopeSubtitle = `${fmt(totalTxns)} transactions across ${gwCount || 2} gateways`;
+    if (hasA && !hasB && gwCount === 1) scopeSubtitle = `${fmt(totalTxns)} transactions (Gateway A Master Table)`;
+    else if (!hasA && hasB && gwCount === 1) scopeSubtitle = `${fmt(totalTxns)} transactions (Gateway B Consolidated)`;
+
+    const cardA = hasA
+        ? kpiCard('Gateway A Rate', fmtPct(gA.effective_rate), `${fmt(gA.txn_count)} txns · Avg ${gA.avg_settlement_days}d settlement`, 'blue')
+        : kpiCard('Gateway A Rate', '—', 'Not Active (Upload GwA files to compare)', 'gray');
+
+    const cardB = hasB
+        ? kpiCard('Gateway B Rate', fmtPct(gB.effective_rate), `${fmt(gB.txn_count)} txns · Avg ${gB.avg_settlement_days}d settlement`, 'purple')
+        : kpiCard('Gateway B Rate', '—', 'Not Active (Upload GwB file to compare)', 'gray');
+
+    const cardFailed = hasA
+        ? kpiCard('Failed (Gw A)', fmt(gA.failed_count), `${fmtPct(DATA.failed_transactions?.gatewayA?.failure_rate || 0)} failure rate`, 'red')
+        : kpiCard('Failed (Gw A)', '—', 'GwA data not active', 'gray');
+
+    const refundCount = (gA?.refund_count || 0) + (gB?.refund_count || 0);
+    const refundVol = (gA?.refund_volume || 0) + (gB?.refund_volume || 0);
 
     document.getElementById('kpiGrid').innerHTML = [
-        kpiCard('Total Volume', fmtCurrency(totalVolume), `${fmt(totalTxns)} transactions across 2 gateways`, 'green'),
+        kpiCard('Total Volume', fmtCurrency(totalVolume), scopeSubtitle, 'green'),
         kpiCard('Total Charges', fmtCurrency(totalCharges), `Effective rate: ${fmtPct(overallRate)}`, 'coral'),
-        kpiCard('Gateway A Rate', fmtPct(gA.effective_rate), `${fmt(gA.txn_count)} txns · Avg ${gA.avg_settlement_days}d settlement`, 'blue'),
-        kpiCard('Gateway B Rate', fmtPct(gB.effective_rate), `${fmt(gB.txn_count)} txns · Avg ${gB.avg_settlement_days}d settlement`, 'purple'),
-        kpiCard('Failed (Gw A)', fmt(gA.failed_count), `${fmtPct(DATA.failed_transactions.gatewayA.failure_rate)} failure rate`, 'red'),
-        kpiCard('Refunds', fmt(gA.refund_count + gB.refund_count), `₹${fmt(gA.refund_volume + gB.refund_volume, 2)} total refunded`, 'yellow'),
+        cardA,
+        cardB,
+        cardFailed,
+        kpiCard('Refunds', fmt(refundCount), `₹${fmt(refundVol, 2)} total refunded`, 'yellow'),
     ].join('');
 
     // Chart: Volume & Charges comparison
+    const gwEntries = DATA.overview.gateways ? Object.entries(DATA.overview.gateways) : [
+        ['Gateway A', gA],
+        ['Gateway B', gB]
+    ];
+    const gwLabels = gwEntries.map(([name]) => name);
+    const gwVolumes = gwEntries.map(([, obj]) => obj?.total_volume || 0);
+    const gwCharges = gwEntries.map(([, obj]) => obj?.total_charges || 0);
+    const volColors = [COLORS.greenSoft, COLORS.blueSoft, COLORS.purpleSoft, COLORS.yellowSoft];
+    const volBorders = [COLORS.green, COLORS.blue, COLORS.purple, COLORS.yellow];
+    const chargeColors = [COLORS.coralSoft, COLORS.yellowSoft, COLORS.coralSoft, COLORS.blueSoft];
+    const chargeBorders = [COLORS.coral, COLORS.yellow, COLORS.coral, COLORS.blue];
+
     makeChart('chartVolumeCompare', 'bar', {
-        labels: ['Gateway A', 'Gateway B'],
+        labels: gwLabels,
         datasets: [
-            { label: 'Volume', data: [gA.total_volume, gB.total_volume], backgroundColor: [COLORS.greenSoft, COLORS.blueSoft], borderColor: [COLORS.green, COLORS.blue], borderWidth: 1.5, borderRadius: 6, barPercentage: 0.5 },
-            { label: 'Charges', data: [gA.total_charges, gB.total_charges], backgroundColor: [COLORS.coralSoft, COLORS.yellowSoft], borderColor: [COLORS.coral, COLORS.yellow], borderWidth: 1.5, borderRadius: 6, barPercentage: 0.5 },
+            { label: 'Volume', data: gwVolumes, backgroundColor: gwLabels.map((_, i) => volColors[i % volColors.length]), borderColor: gwLabels.map((_, i) => volBorders[i % volBorders.length]), borderWidth: 1.5, borderRadius: 6, barPercentage: 0.5 },
+            { label: 'Charges', data: gwCharges, backgroundColor: gwLabels.map((_, i) => chargeColors[i % chargeColors.length]), borderColor: gwLabels.map((_, i) => chargeBorders[i % chargeBorders.length]), borderWidth: 1.5, borderRadius: 6, barPercentage: 0.5 },
         ]
     }, { scales: { y: { ticks: { callback: v => '₹' + (v / 100000).toFixed(0) + 'L' } } } });
 
@@ -450,10 +485,47 @@ function renderExecutive() {
     const sm = DATA.savings_model;
     const oc = DATA.overcharges;
     const recon = DATA.reconciliation;
+    const hasA = DATA.has_gateway_a !== false && gA && gA.total_volume > 0;
+    const hasB = DATA.has_gateway_b !== false && gB && gB.total_volume > 0;
 
-    const totalVol = gA.total_volume + gB.total_volume;
-    const totalCharges = gA.total_charges + gB.total_charges;
-    const blendedRate = (totalCharges / totalVol * 100);
+    const totalVol = (gA?.total_volume || 0) + (gB?.total_volume || 0);
+    const totalCharges = (gA?.total_charges || 0) + (gB?.total_charges || 0);
+    const blendedRate = totalVol > 0 ? (totalCharges / totalVol * 100) : 0;
+
+    let gatewayVolumeItems = '';
+    if (hasA && hasB) {
+        gatewayVolumeItems = `
+            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway A: ${fmtCurrency(gA.total_volume)} at <strong class="text-emerald-400">${fmtPct(gA.effective_rate)}</strong> effective rate</li>
+            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway B: ${fmtCurrency(gB.total_volume)} at <strong class="text-purple-400">${fmtPct(gB.effective_rate)}</strong> effective rate — <strong class="text-red-400">${fmtPct(gB.effective_rate - gA.effective_rate)} higher</strong> than Gateway A</li>
+        `;
+    } else if (hasA) {
+        gatewayVolumeItems = `
+            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway A (Master Enriched Table): ${fmtCurrency(gA.total_volume)} at <strong class="text-emerald-400">${fmtPct(gA.effective_rate)}</strong> effective rate</li>
+            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway B: Not active. (Upload Gateway B consolidated file to unlock comparative analytics)</li>
+        `;
+    } else if (hasB) {
+        gatewayVolumeItems = `
+            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway B (Consolidated Ledger): ${fmtCurrency(gB.total_volume)} at <strong class="text-purple-400">${fmtPct(gB.effective_rate)}</strong> effective rate</li>
+            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway A: Not active. (Upload Gateway A split files to unlock comparative analytics)</li>
+        `;
+    }
+
+    let settlementItems = '';
+    if (hasA && hasB) {
+        settlementItems = `
+            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway A average settlement: <strong class="text-gray-100">${gA.avg_settlement_days} days</strong> (range: ${gA.min_settlement_days}–${gA.max_settlement_days} days)</li>
+            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway B average settlement: <strong class="text-gray-100">${gB.avg_settlement_days} days</strong> (range: ${gB.min_settlement_days}–${gB.max_settlement_days} days)</li>
+            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">${gA.avg_settlement_days < gB.avg_settlement_days ? 'Gateway A settles faster' : 'Gateway B settles faster'} — cash flow advantage of <strong class="text-gray-100">${Math.abs(gA.avg_settlement_days - gB.avg_settlement_days).toFixed(1)} days</strong></li>
+        `;
+    } else if (hasA) {
+        settlementItems = `
+            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway A average settlement: <strong class="text-gray-100">${gA.avg_settlement_days} days</strong> (range: ${gA.min_settlement_days}–${gA.max_settlement_days} days)</li>
+        `;
+    } else if (hasB) {
+        settlementItems = `
+            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway B average settlement: <strong class="text-gray-100">${gB.avg_settlement_days} days</strong> (range: ${gB.min_settlement_days}–${gB.max_settlement_days} days)</li>
+        `;
+    }
 
     document.getElementById('execSummary').innerHTML = `
         <h2 class="text-[2rem] font-extrabold tracking-tighter mb-2 bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">Payment Gateway Analysis</h2>
@@ -464,10 +536,9 @@ function renderExecutive() {
                 <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> Volume & Cost Overview
             </h3>
             <ul class="list-none space-y-1">
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Total processed volume: <strong class="text-gray-100">${fmtCurrency(totalVol)}</strong> across <strong class="text-gray-100">${fmt(gA.txn_count + gB.txn_count)}</strong> transactions</li>
+                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Total processed volume: <strong class="text-gray-100">${fmtCurrency(totalVol)}</strong> across <strong class="text-gray-100">${fmt((gA?.txn_count || 0) + (gB?.txn_count || 0))}</strong> transactions</li>
                 <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Total gateway charges: <strong class="text-gray-100">${fmtCurrency(totalCharges)}</strong> (blended rate: <strong class="text-gray-100">${fmtPct(blendedRate)}</strong>)</li>
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway A: ${fmtCurrency(gA.total_volume)} at <strong class="text-emerald-400">${fmtPct(gA.effective_rate)}</strong> effective rate</li>
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway B: ${fmtCurrency(gB.total_volume)} at <strong class="text-purple-400">${fmtPct(gB.effective_rate)}</strong> effective rate — <strong class="text-red-400">${fmtPct(gB.effective_rate - gA.effective_rate)} higher</strong> than Gateway A</li>
+                ${gatewayVolumeItems}
             </ul>
         </div>
 
@@ -476,9 +547,7 @@ function renderExecutive() {
                 <span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span> Settlement Performance
             </h3>
             <ul class="list-none space-y-1">
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway A average settlement: <strong class="text-gray-100">${gA.avg_settlement_days} days</strong> (range: ${gA.min_settlement_days}–${gA.max_settlement_days} days)</li>
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway B average settlement: <strong class="text-gray-100">${gB.avg_settlement_days} days</strong> (range: ${gB.min_settlement_days}–${gB.max_settlement_days} days)</li>
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">${gA.avg_settlement_days < gB.avg_settlement_days ? 'Gateway A settles faster' : 'Gateway B settles faster'} — cash flow advantage of <strong class="text-gray-100">${Math.abs(gA.avg_settlement_days - gB.avg_settlement_days).toFixed(1)} days</strong></li>
+                ${settlementItems}
             </ul>
         </div>
 

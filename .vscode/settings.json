@@ -1,0 +1,5 @@
+{
+    "extensions.ignoreRecommendations": true,
+    "java.silentNotification": true,
+    "git.showPushSuccessNotification": true
+}

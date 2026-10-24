@@ -1,6 +1,21 @@
 {
   "period": "Aug 2026 \u2013 Sep 2026",
-  "generated_at": "2026-10-24T20:16:39.923647",
+  "generated_at": "2026-10-24T23:51:57.014467",
+  "mode": "dual_gateway_comparative",
+  "has_gateway_a": true,
+  "has_gateway_b": true,
+  "available_months": [
+    "August 2026",
+    "September 2026"
+  ],
+  "selected_months": "all",
+  "master_table_info": {
+    "status": "auto_linked",
+    "payment_key": "id",
+    "settlement_key": "entity_id",
+    "total_rows": 343,
+    "matched_metadata_rows": 343
+  },
   "overview": {
     "gatewayA": {
       "name": "Gateway A",
@@ -57,6 +72,65 @@
         "4": 58,
         "5": 312,
         "6": 85
+      }
+    },
+    "gateways": {
+      "Gateway A": {
+        "name": "Gateway A",
+        "total_volume": 19005194.27,
+        "total_charges": 390891.67,
+        "effective_rate": 2.06,
+        "txn_count": 343,
+        "failed_count": 173,
+        "total_payments": 475,
+        "failure_rate": 36.42,
+        "refund_count": 13,
+        "refund_volume": 360195.0,
+        "avg_settlement_days": 0.2,
+        "min_settlement_days": 0,
+        "max_settlement_days": 3,
+        "settlement_distribution": {
+          "0": 290,
+          "1": 28,
+          "2": 21,
+          "3": 4
+        },
+        "adj_deductions": 28319.76,
+        "domestic": {
+          "volume": 14738791.54,
+          "charges": 254517.14,
+          "count": 295,
+          "rate": 1.73
+        },
+        "international": {
+          "volume": 4266402.73,
+          "charges": 136374.53,
+          "count": 48,
+          "rate": 3.2
+        }
+      },
+      "Gateway B": {
+        "name": "Gateway B",
+        "total_volume": 18999773.93,
+        "total_charges": 1372006.13,
+        "effective_rate": 7.22,
+        "txn_count": 598,
+        "refund_count": 42,
+        "refund_volume": 1723740.33,
+        "dispute_count": 1,
+        "standalone_fees": 116336.49,
+        "tds_amount": 20247.13,
+        "avg_settlement_days": 4.5,
+        "min_settlement_days": 1,
+        "max_settlement_days": 6,
+        "settlement_distribution": {
+          "1": 28,
+          "2": 10,
+          "3": 105,
+          "4": 58,
+          "5": 312,
+          "6": 85
+        }
       }
     }
   },
@@ -368,6 +442,14 @@
     }
   },
   "by_card_network": {
+    "Diners Club": {
+      "gatewayA": {
+        "volume": 416692.41,
+        "count": 8,
+        "charges": 8683.47,
+        "rate": 2.08
+      }
+    },
     "American Express": {
       "gatewayA": {
         "volume": 1622468.56,
@@ -382,14 +464,6 @@
         "rate": 6.13
       }
     },
-    "Other": {
-      "gatewayA": {
-        "volume": 1648.0,
-        "count": 2,
-        "charges": 13.6,
-        "rate": 0.83
-      }
-    },
     "RuPay": {
       "gatewayA": {
         "volume": 315600.0,
@@ -398,12 +472,18 @@
         "rate": 1.22
       }
     },
-    "Diners Club": {
+    "MasterCard": {
       "gatewayA": {
-        "volume": 416692.41,
-        "count": 8,
-        "charges": 8683.47,
-        "rate": 2.08
+        "volume": 6650687.86,
+        "count": 112,
+        "charges": 137673.43,
+        "rate": 2.07
+      },
+      "gatewayB": {
+        "volume": 6123615.5,
+        "count": 164,
+        "charges": 395053.96,
+        "rate": 6.45
       }
     },
     "Visa": {
@@ -420,18 +500,12 @@
         "rate": 6.57
       }
     },
-    "MasterCard": {
+    "Other": {
       "gatewayA": {
-        "volume": 6650687.86,
-        "count": 112,
-        "charges": 137673.43,
-        "rate": 2.07
-      },
-      "gatewayB": {
-        "volume": 6123615.5,
-        "count": 164,
-        "charges": 395053.96,
-        "rate": 6.45
+        "volume": 1648.0,
+        "count": 2,
+        "charges": 13.6,
+        "rate": 0.83
       }
     }
   },
@@ -465,40 +539,40 @@
           "volume": 5070064.35,
           "charges": 114131.95,
           "count": 79,
-          "rate": 2.25,
-          "avg_settlement_days": 0.1
+          "avg_settle": 0.1,
+          "rate": 2.25
         },
         {
           "period": "W37",
           "volume": 2749487.75,
           "charges": 54056.81,
           "count": 46,
-          "rate": 1.97,
-          "avg_settlement_days": 0.8
+          "avg_settle": 0.8,
+          "rate": 1.97
         },
         {
           "period": "W38",
           "volume": 3113252.8,
           "charges": 64891.27,
           "count": 60,
-          "rate": 2.08,
-          "avg_settlement_days": 0.1
+          "avg_settle": 0.1,
+          "rate": 2.08
         },
         {
           "period": "W39",
           "volume": 4791620.35,
           "charges": 96059.65,
           "count": 91,
-          "rate": 2.0,
-          "avg_settlement_days": 0.4
+          "avg_settle": 0.4,
+          "rate": 2.0
         },
         {
           "period": "W40",
           "volume": 3280769.02,
           "charges": 61751.99,
           "count": 67,
-          "rate": 1.88,
-          "avg_settlement_days": 0.0
+          "avg_settle": 0.0,
+          "rate": 1.88
         }
       ],
       "gatewayB": [
@@ -507,40 +581,40 @@
           "volume": 3894981.46,
           "charges": 246396.14,
           "count": 110,
-          "rate": 6.33,
-          "avg_settlement_days": 4.3
+          "avg_settle": 4.3,
+          "rate": 6.33
         },
         {
           "period": "W37",
           "volume": 4443191.66,
           "charges": 271519.24,
           "count": 143,
-          "rate": 6.11,
-          "avg_settlement_days": 4.2
+          "avg_settle": 4.2,
+          "rate": 6.11
         },
         {
           "period": "W38",
           "volume": 3240334.24,
           "charges": 214817.92,
           "count": 113,
-          "rate": 6.63,
-          "avg_settlement_days": 4.1
+          "avg_settle": 4.1,
+          "rate": 6.63
         },
         {
           "period": "W39",
           "volume": 4546767.82,
           "charges": 306467.6,
           "count": 143,
-          "rate": 6.74,
-          "avg_settlement_days": 4.3
+          "avg_settle": 4.3,
+          "rate": 6.74
         },
         {
           "period": "W40",
           "volume": 2874498.75,
           "charges": 196221.61,
           "count": 89,
-          "rate": 6.83,
-          "avg_settlement_days": 5.8
+          "avg_settle": 5.8,
+          "rate": 6.83
         }
       ]
     },
@@ -551,16 +625,16 @@
           "volume": 2494316.19,
           "charges": 52966.62,
           "count": 41,
-          "rate": 2.12,
-          "avg_settlement_days": 0.0
+          "avg_settle": 0.0,
+          "rate": 2.12
         },
         {
           "period": "2026-09",
           "volume": 16510878.08,
           "charges": 337925.05,
           "count": 302,
-          "rate": 2.05,
-          "avg_settlement_days": 0.3
+          "avg_settle": 0.3,
+          "rate": 2.05
         }
       ],
       "gatewayB": [
@@ -569,8 +643,8 @@
           "volume": 18999773.93,
           "charges": 1235422.51,
           "count": 598,
-          "rate": 6.5,
-          "avg_settlement_days": 4.5
+          "avg_settle": 4.5,
+          "rate": 6.5
         }
       ]
     }
@@ -597,12 +671,6 @@
           "count": 15,
           "rate": 3.2
         },
-        "GBP": {
-          "volume": 676987.23,
-          "charges": 21656.44,
-          "count": 8,
-          "rate": 3.2
-        },
         "AUD": {
           "volume": 667852.56,
           "charges": 21344.6,
@@ -621,22 +689,28 @@
           "count": 4,
           "rate": 3.2
         },
+        "GBP": {
+          "volume": 676987.23,
+          "charges": 21656.44,
+          "count": 8,
+          "rate": 3.2
+        },
         "HKD": {
           "volume": 317588.65,
           "charges": 10150.15,
           "count": 4,
           "rate": 3.2
         },
-        "SEK": {
-          "volume": 306807.79,
-          "charges": 9805.64,
-          "count": 3,
-          "rate": 3.2
-        },
         "INR": {
           "volume": 72800.0,
           "charges": 2326.68,
           "count": 1,
+          "rate": 3.2
+        },
+        "SEK": {
+          "volume": 306807.79,
+          "charges": 9805.64,
+          "count": 3,
           "rate": 3.2
         },
         "THB": {
@@ -662,58 +736,16 @@
       },
       "fx_premium_pct": 4.32,
       "intl_by_country": {
-        "US": {
-          "volume": 11997115.93,
-          "charges": 809635.0,
-          "count": 415,
-          "rate": 6.75
-        },
-        "AU": {
-          "volume": 1716364.8,
-          "charges": 117467.95,
-          "count": 31,
-          "rate": 6.84
-        },
         "AE": {
           "volume": 1512287.78,
           "charges": 103488.99,
           "count": 30,
           "rate": 6.84
         },
-        "CA": {
-          "volume": 815947.92,
-          "charges": 55822.42,
-          "count": 23,
-          "rate": 6.84
-        },
-        "GB": {
-          "volume": 751209.05,
-          "charges": 51412.75,
-          "count": 10,
-          "rate": 6.84
-        },
-        "SA": {
-          "volume": 308179.31,
-          "charges": 21085.79,
-          "count": 8,
-          "rate": 6.84
-        },
-        "NZ": {
-          "volume": 246267.59,
-          "charges": 16854.55,
-          "count": 2,
-          "rate": 6.84
-        },
-        "ID": {
-          "volume": 109441.74,
-          "charges": 7490.19,
-          "count": 1,
-          "rate": 6.84
-        },
-        "CH": {
-          "volume": 85872.93,
-          "charges": 5877.14,
-          "count": 2,
+        "AU": {
+          "volume": 1716364.8,
+          "charges": 117467.95,
+          "count": 31,
           "rate": 6.84
         },
         "BE": {
@@ -722,22 +754,70 @@
           "count": 1,
           "rate": 6.84
         },
-        "SG": {
-          "volume": 54283.47,
-          "charges": 3715.16,
+        "CA": {
+          "volume": 815947.92,
+          "charges": 55822.42,
+          "count": 23,
+          "rate": 6.84
+        },
+        "CH": {
+          "volume": 85872.93,
+          "charges": 5877.14,
+          "count": 2,
+          "rate": 6.84
+        },
+        "GB": {
+          "volume": 751209.05,
+          "charges": 51412.75,
+          "count": 10,
+          "rate": 6.84
+        },
+        "HN": {
+          "volume": 287.46,
+          "charges": 16.68,
+          "count": 1,
+          "rate": 5.8
+        },
+        "ID": {
+          "volume": 109441.74,
+          "charges": 7490.19,
           "count": 1,
           "rate": 6.84
         },
-        "QA": {
-          "volume": 50965.01,
-          "charges": 3488.06,
+        "KG": {
+          "volume": 575.16,
+          "charges": 33.36,
+          "count": 2,
+          "rate": 5.8
+        },
+        "KZ": {
+          "volume": 286.81,
+          "charges": 16.64,
           "count": 1,
-          "rate": 6.84
+          "rate": 5.8
+        },
+        "LB": {
+          "volume": 287.2,
+          "charges": 16.66,
+          "count": 1,
+          "rate": 5.8
         },
         "LU": {
           "volume": 45113.58,
           "charges": 3087.58,
           "count": 1,
+          "rate": 6.84
+        },
+        "MN": {
+          "volume": 959.53,
+          "charges": 55.65,
+          "count": 1,
+          "rate": 5.8
+        },
+        "NZ": {
+          "volume": 246267.59,
+          "charges": 16854.55,
+          "count": 2,
           "rate": 6.84
         },
         "PA": {
@@ -746,25 +826,73 @@
           "count": 1,
           "rate": 6.84
         },
+        "PE": {
+          "volume": 861.87,
+          "charges": 44.82,
+          "count": 3,
+          "rate": 5.2
+        },
         "PH": {
           "volume": 3904.34,
           "charges": 255.19,
           "count": 2,
           "rate": 6.54
+        },
+        "QA": {
+          "volume": 50965.01,
+          "charges": 3488.06,
+          "count": 1,
+          "rate": 6.84
+        },
+        "RO": {
+          "volume": 287.97,
+          "charges": 16.71,
+          "count": 1,
+          "rate": 5.8
+        },
+        "RW": {
+          "volume": 287.19,
+          "charges": 16.65,
+          "count": 1,
+          "rate": 5.8
+        },
+        "SA": {
+          "volume": 308179.31,
+          "charges": 21085.79,
+          "count": 8,
+          "rate": 6.84
+        },
+        "SG": {
+          "volume": 54283.47,
+          "charges": 3715.16,
+          "count": 1,
+          "rate": 6.84
+        },
+        "UA": {
+          "volume": 287.39,
+          "charges": 16.67,
+          "count": 1,
+          "rate": 5.8
+        },
+        "US": {
+          "volume": 11997115.93,
+          "charges": 809635.0,
+          "count": 415,
+          "rate": 6.75
         }
       }
     }
   },
   "reconciliation": {
     "total_mismatches": 0,
-    "total_fee_diff": 0,
-    "total_tax_diff": 0,
+    "total_fee_diff": 0.0,
+    "total_tax_diff": 0.0,
     "unsettled_count": 0,
     "mismatches": []
   },
   "overcharges": {
     "count": 47,
-    "total_overcharge": 39254.86,
+    "total_overcharge": 42983.95,
     "items": [
       {
         "payment_id": "apay_U662aMzIOaZ88O",
@@ -773,11 +901,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 4066.85,
+        "expected_fee": 3761.84,
         "actual_fee": 7466.74,
-        "overcharge": 3399.89
+        "overcharge": 3704.9
       },
       {
         "payment_id": "apay_qcySbp9v7OfqtZ",
@@ -786,11 +914,11 @@
         "method": "card",
         "international": 0,
         "card_network": "Visa",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.2,
-        "expected_fee": 3784.33,
+        "expected_fee": 3500.51,
         "actual_fee": 6047.36,
-        "overcharge": 2263.03
+        "overcharge": 2546.85
       },
       {
         "payment_id": "apay_4OQgbQLGdyXcvk",
@@ -799,11 +927,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 2491.52,
+        "expected_fee": 2304.66,
         "actual_fee": 4574.44,
-        "overcharge": 2082.92
+        "overcharge": 2269.78
       },
       {
         "payment_id": "apay_IEk6dZnfsU5SnT",
@@ -812,11 +940,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 2256.41,
+        "expected_fee": 2087.18,
         "actual_fee": 4142.76,
-        "overcharge": 1886.35
+        "overcharge": 2055.58
       },
       {
         "payment_id": "apay_IV0Je0FKhsSWb0",
@@ -825,11 +953,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 1963.52,
+        "expected_fee": 1816.26,
         "actual_fee": 3605.04,
-        "overcharge": 1641.52
+        "overcharge": 1788.78
       },
       {
         "payment_id": "apay_tVR4IdGxf4afKS",
@@ -838,11 +966,11 @@
         "method": "card",
         "international": 0,
         "card_network": "MasterCard",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.74,
-        "expected_fee": 1456.0,
+        "expected_fee": 1346.8,
         "actual_fee": 2722.72,
-        "overcharge": 1266.72
+        "overcharge": 1375.92
       },
       {
         "payment_id": "apay_8W79HJrQsrdmFa",
@@ -851,11 +979,11 @@
         "method": "card",
         "international": 0,
         "card_network": "Visa",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.74,
-        "expected_fee": 1456.0,
+        "expected_fee": 1346.8,
         "actual_fee": 2722.72,
-        "overcharge": 1266.72
+        "overcharge": 1375.92
       },
       {
         "payment_id": "apay_cxy7uOrpXiMMPH",
@@ -864,11 +992,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 1456.0,
+        "expected_fee": 1346.8,
         "actual_fee": 2673.2,
-        "overcharge": 1217.2
+        "overcharge": 1326.4
       },
       {
         "payment_id": "apay_hxrRGGcvi71utZ",
@@ -877,11 +1005,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 1456.0,
+        "expected_fee": 1346.8,
         "actual_fee": 2673.2,
-        "overcharge": 1217.2
+        "overcharge": 1326.4
       },
       {
         "payment_id": "apay_hMTaluLqBmrQBV",
@@ -890,11 +1018,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 1454.0,
+        "expected_fee": 1344.95,
         "actual_fee": 2669.54,
-        "overcharge": 1215.54
+        "overcharge": 1324.59
       },
       {
         "payment_id": "apay_5o7RokKz971hIP",
@@ -903,11 +1031,11 @@
         "method": "card",
         "international": 0,
         "card_network": "MasterCard",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.74,
-        "expected_fee": 1310.4,
+        "expected_fee": 1212.12,
         "actual_fee": 2450.44,
-        "overcharge": 1140.04
+        "overcharge": 1238.32
       },
       {
         "payment_id": "apay_YZr8dwxCyhIg9e",
@@ -916,11 +1044,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 1152.36,
+        "expected_fee": 1065.93,
         "actual_fee": 2115.73,
-        "overcharge": 963.37
+        "overcharge": 1049.8
       },
       {
         "payment_id": "apay_kFoAaKJ5qPje8W",
@@ -929,24 +1057,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 1150.36,
+        "expected_fee": 1064.08,
         "actual_fee": 2112.07,
-        "overcharge": 961.71
-      },
-      {
-        "payment_id": "apay_bhep5PaZUPGcWk",
-        "currency": "INR",
-        "amount_inr": 54597.0,
-        "method": "card",
-        "international": 0,
-        "card_network": "MasterCard",
-        "expected_rate": 2.0,
-        "actual_rate": 3.74,
-        "expected_fee": 1091.94,
-        "actual_fee": 2041.94,
-        "overcharge": 950.0
+        "overcharge": 1047.99
       },
       {
         "payment_id": "apay_5lciMFD5kp1eb0",
@@ -955,11 +1070,24 @@
         "method": "card",
         "international": 0,
         "card_network": "MasterCard",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.2,
-        "expected_fee": 1555.46,
+        "expected_fee": 1438.8,
         "actual_fee": 2485.63,
-        "overcharge": 930.17
+        "overcharge": 1046.83
+      },
+      {
+        "payment_id": "apay_bhep5PaZUPGcWk",
+        "currency": "INR",
+        "amount_inr": 54597.0,
+        "method": "card",
+        "international": 0,
+        "card_network": "MasterCard",
+        "expected_rate": 1.85,
+        "actual_rate": 3.74,
+        "expected_fee": 1010.04,
+        "actual_fee": 2041.94,
+        "overcharge": 1031.9
       },
       {
         "payment_id": "apay_4eQa3wv4emeaPl",
@@ -968,11 +1096,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 1102.48,
+        "expected_fee": 1019.79,
         "actual_fee": 2024.15,
-        "overcharge": 921.67
+        "overcharge": 1004.36
       },
       {
         "payment_id": "apay_Sy24jAMTsSCJJx",
@@ -981,11 +1109,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 1091.94,
+        "expected_fee": 1010.04,
         "actual_fee": 2004.8,
-        "overcharge": 912.86
+        "overcharge": 994.76
       },
       {
         "payment_id": "apay_YFisi1RqnEDIjg",
@@ -994,11 +1122,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 1089.94,
+        "expected_fee": 1008.19,
         "actual_fee": 2001.14,
-        "overcharge": 911.2
+        "overcharge": 992.95
       },
       {
         "payment_id": "apay_MivhMccl3ZWpSp",
@@ -1007,50 +1135,11 @@
         "method": "card",
         "international": 0,
         "card_network": "Visa",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.74,
-        "expected_fee": 936.4,
+        "expected_fee": 866.17,
         "actual_fee": 1751.07,
-        "overcharge": 814.67
-      },
-      {
-        "payment_id": "apay_tlnD5wvL15MASM",
-        "currency": "INR",
-        "amount_inr": 46820.0,
-        "method": "card",
-        "international": 0,
-        "card_network": "American Express",
-        "expected_rate": 2.0,
-        "actual_rate": 3.67,
-        "expected_fee": 936.4,
-        "actual_fee": 1719.22,
-        "overcharge": 782.82
-      },
-      {
-        "payment_id": "apay_t2kI2x5nCnrcgl",
-        "currency": "INR",
-        "amount_inr": 46820.0,
-        "method": "card",
-        "international": 0,
-        "card_network": "American Express",
-        "expected_rate": 2.0,
-        "actual_rate": 3.67,
-        "expected_fee": 936.4,
-        "actual_fee": 1719.22,
-        "overcharge": 782.82
-      },
-      {
-        "payment_id": "apay_9k1HO981wbXvaC",
-        "currency": "INR",
-        "amount_inr": 46700.0,
-        "method": "card",
-        "international": 0,
-        "card_network": "American Express",
-        "expected_rate": 2.0,
-        "actual_rate": 3.67,
-        "expected_fee": 934.0,
-        "actual_fee": 1714.82,
-        "overcharge": 780.82
+        "overcharge": 884.9
       },
       {
         "payment_id": "apay_JXCWZezDsp3R7F",
@@ -1059,11 +1148,50 @@
         "method": "card",
         "international": 0,
         "card_network": "MasterCard",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.2,
-        "expected_fee": 1270.77,
+        "expected_fee": 1175.46,
         "actual_fee": 2030.68,
-        "overcharge": 759.91
+        "overcharge": 855.22
+      },
+      {
+        "payment_id": "apay_tlnD5wvL15MASM",
+        "currency": "INR",
+        "amount_inr": 46820.0,
+        "method": "card",
+        "international": 0,
+        "card_network": "American Express",
+        "expected_rate": 1.85,
+        "actual_rate": 3.67,
+        "expected_fee": 866.17,
+        "actual_fee": 1719.22,
+        "overcharge": 853.05
+      },
+      {
+        "payment_id": "apay_t2kI2x5nCnrcgl",
+        "currency": "INR",
+        "amount_inr": 46820.0,
+        "method": "card",
+        "international": 0,
+        "card_network": "American Express",
+        "expected_rate": 1.85,
+        "actual_rate": 3.67,
+        "expected_fee": 866.17,
+        "actual_fee": 1719.22,
+        "overcharge": 853.05
+      },
+      {
+        "payment_id": "apay_9k1HO981wbXvaC",
+        "currency": "INR",
+        "amount_inr": 46700.0,
+        "method": "card",
+        "international": 0,
+        "card_network": "American Express",
+        "expected_rate": 1.85,
+        "actual_rate": 3.67,
+        "expected_fee": 863.95,
+        "actual_fee": 1714.82,
+        "overcharge": 850.87
       },
       {
         "payment_id": "apay_IALbZILmaut0Eg",
@@ -1072,11 +1200,11 @@
         "method": "card",
         "international": 0,
         "card_network": "MasterCard",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.2,
-        "expected_fee": 1194.2,
+        "expected_fee": 1104.63,
         "actual_fee": 1908.35,
-        "overcharge": 714.15
+        "overcharge": 803.72
       },
       {
         "payment_id": "apay_iFgw1gGbHDOvRO",
@@ -1085,11 +1213,11 @@
         "method": "card",
         "international": 0,
         "card_network": "MasterCard",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.2,
-        "expected_fee": 1191.24,
+        "expected_fee": 1101.9,
         "actual_fee": 1903.6,
-        "overcharge": 712.36
+        "overcharge": 801.7
       },
       {
         "payment_id": "apay_mIQ9bSl9I1l7GS",
@@ -1098,11 +1226,11 @@
         "method": "card",
         "international": 0,
         "card_network": "Visa",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.74,
-        "expected_fee": 780.02,
+        "expected_fee": 721.52,
         "actual_fee": 1458.65,
-        "overcharge": 678.63
+        "overcharge": 737.13
       },
       {
         "payment_id": "apay_UqcBbuiFBkK9Eg",
@@ -1111,11 +1239,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 780.02,
+        "expected_fee": 721.52,
         "actual_fee": 1432.11,
-        "overcharge": 652.09
+        "overcharge": 710.59
       },
       {
         "payment_id": "apay_mOGiQaXxbYkmPT",
@@ -1124,11 +1252,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 655.2,
+        "expected_fee": 606.06,
         "actual_fee": 1202.96,
-        "overcharge": 547.76
+        "overcharge": 596.9
       },
       {
         "payment_id": "apay_YvP4l0Ch6rQ85E",
@@ -1137,11 +1265,11 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 655.2,
+        "expected_fee": 606.06,
         "actual_fee": 1202.96,
-        "overcharge": 547.76
+        "overcharge": 596.9
       },
       {
         "payment_id": "apay_WUfsPeVNMgHWRG",
@@ -1150,18 +1278,18 @@
         "method": "card",
         "international": 0,
         "card_network": "American Express",
-        "expected_rate": 2.0,
+        "expected_rate": 1.85,
         "actual_rate": 3.67,
-        "expected_fee": 653.2,
+        "expected_fee": 604.21,
         "actual_fee": 1199.26,
-        "overcharge": 546.06
+        "overcharge": 595.05
       }
     ],
     "contracted_rates": {
       "upi": 0.0,
-      "emi": 2.5,
-      "domestic_card": 2.0,
-      "intl_card": 3.0
+      "domestic_card": 1.85,
+      "emi": 2.0,
+      "intl_card": 2.85
     }
   },
   "savings_model": {
@@ -1203,71 +1331,28 @@
     "total_potential_saving": 851604.2,
     "annualized_saving": 10219250.4
   },
-  "renegotiation": {
-    "by_category": [
-      {
-        "category": "Domestic Card",
-        "overcharge_count": 46,
-        "total_overcharge": 39248.06,
-        "volume_affected": 2486040.79,
-        "contracted_rate": 2.0,
-        "avg_actual_rate": 3.58,
-        "max_actual_rate": 3.74,
-        "recommended_action": "Renegotiate Domestic Card rate from 3.58% down to 2.0% (contracted). Recoverable: INR 39,248"
-      },
-      {
-        "category": "Domestic Upi",
-        "overcharge_count": 1,
-        "total_overcharge": 6.8,
-        "volume_affected": 299.0,
-        "contracted_rate": 0.0,
-        "avg_actual_rate": 2.27,
-        "max_actual_rate": 2.27,
-        "recommended_action": "Renegotiate Domestic Upi rate from 2.27% down to 0.0% (contracted). Recoverable: INR 7"
-      }
-    ],
-    "by_network": [
-      {
-        "network": "American Express",
-        "overcharge_count": 31,
-        "total_overcharge": 26207.67,
-        "avg_actual_rate": 3.67
-      },
-      {
-        "network": "MasterCard",
-        "overcharge_count": 8,
-        "total_overcharge": 6893.17,
-        "avg_actual_rate": 3.4
-      },
-      {
-        "network": "Visa",
-        "overcharge_count": 7,
-        "total_overcharge": 6147.22,
-        "avg_actual_rate": 3.51
-      },
-      {
-        "network": "Other",
-        "overcharge_count": 1,
-        "total_overcharge": 6.8,
-        "avg_actual_rate": 2.27
-      }
-    ],
-    "gateway_comparison": {
-      "gateway_a_rate": 2.06,
-      "gateway_b_rate": 7.22,
-      "rate_premium_pp": 5.16,
-      "recommendation": "Gateway B is 5.16pp more expensive than Gateway A overall. Route Visa/MasterCard/Amex through Gateway A where possible to save INR 851,604/month."
+  "renegotiation": [
+    {
+      "category": "Domestic Card",
+      "overcharge_count": 46,
+      "total_overcharge": 42977.15,
+      "volume_affected": 2486040.79,
+      "contracted_rate": 1.85,
+      "avg_actual_rate": 3.58,
+      "max_actual_rate": 3.74,
+      "recommended_target_rate": 2.1
     },
-    "total_recoverable": 39254.86,
-    "total_monthly_saving": 851604.2,
-    "summary": [
-      "1. RECOVER INR 39,255 from 47 overcharged transactions by raising billing disputes with Gateway A.",
-      "2. RENEGOTIATE rates for 2 overcharged categories (see table below).",
-      "3. ROUTE 37,271,028 INR of card volume through Gateway A (cheapest for Visa, MasterCard, Amex) to save INR 851,604/month (10,219,250/yr).",
-      "4. INVESTIGATE Gateway B's 5.16pp rate premium \u2014 push for rate parity or shift volume.",
-      "5. AUDIT international transactions \u2014 FX premium of 1.47pp on Gateway A, 4.32pp on Gateway B. Negotiate FX markup caps."
-    ]
-  },
+    {
+      "category": "Domestic Upi",
+      "overcharge_count": 1,
+      "total_overcharge": 6.8,
+      "volume_affected": 299.0,
+      "contracted_rate": 0.0,
+      "avg_actual_rate": 2.27,
+      "max_actual_rate": 2.27,
+      "recommended_target_rate": 0.25
+    }
+  ],
   "failed_transactions": {
     "gatewayA": {
       "count": 173,
@@ -1390,5 +1475,9 @@
       "count": 42,
       "volume": 1723740.33
     }
-  }
+  },
+  "gateway_names": [
+    "Gateway A",
+    "Gateway B"
+  ]
 }
