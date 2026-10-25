@@ -13,7 +13,7 @@ import urllib.request
 import urllib.error
 from datetime import datetime
 
-DEFAULT_API_KEY = "AQ.Ab8RN6KWYOC53v8bCNvo2gr4D43OAHzs7hyLCs6Qckl_qJw3Qw"
+DEFAULT_API_KEY = os.getenv("GEMINI_API_KEY", "")
 PREFERRED_MODEL = "gemini-2.5-flash-lite"
 FALLBACK_MODELS = [
     "gemini-3.5-flash-lite",
