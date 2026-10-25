@@ -1,6 +1,6 @@
 {
   "period": "Aug 2026 \u2013 Sep 2026",
-  "generated_at": "2026-10-24T23:51:57.014467",
+  "generated_at": "2026-10-25T18:40:05.559494",
   "mode": "dual_gateway_comparative",
   "has_gateway_a": true,
   "has_gateway_b": true,
@@ -442,12 +442,34 @@
     }
   },
   "by_card_network": {
+    "MasterCard": {
+      "gatewayA": {
+        "volume": 6650687.86,
+        "count": 112,
+        "charges": 137673.43,
+        "rate": 2.07
+      },
+      "gatewayB": {
+        "volume": 6123615.5,
+        "count": 164,
+        "charges": 395053.96,
+        "rate": 6.45
+      }
+    },
     "Diners Club": {
       "gatewayA": {
         "volume": 416692.41,
         "count": 8,
         "charges": 8683.47,
         "rate": 2.08
+      }
+    },
+    "Other": {
+      "gatewayA": {
+        "volume": 1648.0,
+        "count": 2,
+        "charges": 13.6,
+        "rate": 0.83
       }
     },
     "American Express": {
@@ -472,20 +494,6 @@
         "rate": 1.22
       }
     },
-    "MasterCard": {
-      "gatewayA": {
-        "volume": 6650687.86,
-        "count": 112,
-        "charges": 137673.43,
-        "rate": 2.07
-      },
-      "gatewayB": {
-        "volume": 6123615.5,
-        "count": 164,
-        "charges": 395053.96,
-        "rate": 6.45
-      }
-    },
     "Visa": {
       "gatewayA": {
         "volume": 9998097.44,
@@ -498,14 +506,6 @@
         "count": 391,
         "charges": 760113.13,
         "rate": 6.57
-      }
-    },
-    "Other": {
-      "gatewayA": {
-        "volume": 1648.0,
-        "count": 2,
-        "charges": 13.6,
-        "rate": 0.83
       }
     }
   },

@@ -1,6 +1,7 @@
 /**
  * PayAnalytics — Payment Gateway Cost & Settlement Analysis
- * Main application script. Loads dashboard_data.json and renders all sections.
+ * Main application script. Airtable Editorial Design System (DESIGN.md)
+ * Web Interface Guidelines Compliant: Accessible, Tabular Numerics, Fluid Pacing.
  */
 
 // ============================================================
@@ -17,40 +18,96 @@ const fmt = (n, decimals = 0) => {
 const fmtCurrency = (n) => '₹' + fmt(n, 2);
 const fmtPct = (n) => fmt(n, 2) + '%';
 
+// Airtable Palette (from DESIGN.md)
 const COLORS = {
-    green: '#39e58c',
-    greenSoft: 'rgba(57,229,140,0.15)',
-    blue: '#5b8af5',
-    blueSoft: 'rgba(91,138,245,0.15)',
-    coral: '#ff7759',
-    coralSoft: 'rgba(255,119,89,0.15)',
-    yellow: '#f5c842',
-    yellowSoft: 'rgba(245,200,66,0.15)',
-    purple: '#a87ee6',
-    purpleSoft: 'rgba(168,126,230,0.15)',
-    red: '#ef4444',
-    redSoft: 'rgba(239,68,68,0.15)',
-    gray: '#93939f',
-    graySoft: 'rgba(147,147,159,0.15)',
+    primary: '#181d26',
+    ink: '#181d26',
+    body: '#333840',
+    muted: '#41454d',
+    hairline: '#dddddd',
+    canvas: '#ffffff',
+    surfaceSoft: '#f8fafc',
+    surfaceStrong: '#e0e2e6',
+    
+    // Airtable Signature Voltage Colors
+    coral: '#aa2d00',
+    coralSoft: 'rgba(170, 45, 0, 0.12)',
+    forest: '#0a2e0e',
+    forestSoft: 'rgba(10, 46, 14, 0.12)',
+    cream: '#f5e9d4',
+    peach: '#fcab79',
+    peachSoft: 'rgba(252, 171, 121, 0.2)',
+    mint: '#a8d8c4',
+    mintSoft: 'rgba(168, 216, 196, 0.25)',
+    yellow: '#f4d35e',
+    mustard: '#d9a441',
+    yellowSoft: 'rgba(217, 164, 65, 0.15)',
+    
+    // Semantic
+    blue: '#1b61c9',
+    blueSoft: 'rgba(27, 97, 201, 0.12)',
+    info: '#254fad',
+    infoSoft: 'rgba(37, 79, 173, 0.12)',
+    success: '#006400',
+    successSoft: 'rgba(0, 100, 0, 0.12)',
+    red: '#aa2d00',
+    redSoft: 'rgba(170, 45, 0, 0.12)',
+    gray: '#75758a',
+    graySoft: 'rgba(117, 117, 138, 0.12)',
 };
 
-const CHART_PALETTE = ['#39e58c', '#5b8af5', '#ff7759', '#f5c842', '#a87ee6', '#ef4444', '#38bdf8', '#fb923c', '#c084fc', '#4ade80'];
+const CHART_PALETTE = [
+    '#181d26',
+    '#aa2d00',
+    '#0a2e0e',
+    '#1b61c9',
+    '#d9a441',
+    '#fcab79',
+    '#a8d8c4',
+    '#254fad',
+    '#006400',
+    '#75758a'
+];
 
 const CHART_DEFAULTS = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-        legend: { labels: { color: '#93939f', font: { family: 'Inter', size: 11 }, padding: 16, usePointStyle: true, pointStyle: 'rectRounded' } },
+        legend: {
+            labels: {
+                color: '#41454d',
+                font: { family: "'Inter', -apple-system, sans-serif", size: 12, weight: 500 },
+                padding: 16,
+                usePointStyle: true,
+                pointStyle: 'rectRounded'
+            }
+        },
         tooltip: {
-            backgroundColor: '#1e1e2a', titleColor: '#f0f0f5', bodyColor: '#93939f',
-            borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, cornerRadius: 8, padding: 12,
-            titleFont: { family: 'Inter', weight: '600' }, bodyFont: { family: 'Inter' },
-            callbacks: { label: ctx => ` ${ctx.dataset.label || ''}: ${ctx.parsed.y != null ? fmtCurrency(ctx.parsed.y) : ctx.parsed}` }
+            backgroundColor: '#181d26',
+            titleColor: '#ffffff',
+            bodyColor: '#e0e2e6',
+            borderColor: 'rgba(255,255,255,0.12)',
+            borderWidth: 1,
+            cornerRadius: 8,
+            padding: 12,
+            titleFont: { family: "'Inter', -apple-system, sans-serif", weight: '500' },
+            bodyFont: { family: "'Inter', -apple-system, sans-serif" },
+            callbacks: {
+                label: ctx => ` ${ctx.dataset.label || ''}: ${ctx.parsed.y != null ? fmtCurrency(ctx.parsed.y) : ctx.parsed}`
+            }
         }
     },
     scales: {
-        x: { ticks: { color: '#65657a', font: { family: 'Inter', size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' }, border: { color: 'rgba(255,255,255,0.06)' } },
-        y: { ticks: { color: '#65657a', font: { family: 'Inter', size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' }, border: { color: 'rgba(255,255,255,0.06)' } }
+        x: {
+            ticks: { color: '#75758a', font: { family: "'Inter', -apple-system, sans-serif", size: 11 } },
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            border: { color: '#dddddd' }
+        },
+        y: {
+            ticks: { color: '#75758a', font: { family: "'Inter', -apple-system, sans-serif", size: 11 } },
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            border: { color: '#dddddd' }
+        }
     }
 };
 
@@ -58,7 +115,6 @@ function makeChart(id, type, data, options = {}) {
     const ctx = document.getElementById(id);
     if (!ctx) return null;
     const merged = JSON.parse(JSON.stringify(CHART_DEFAULTS));
-    // Deep merge options
     for (const key in options) {
         if (typeof options[key] === 'object' && !Array.isArray(options[key]) && merged[key]) {
             Object.assign(merged[key], options[key]);
@@ -73,36 +129,52 @@ function makeChart(id, type, data, options = {}) {
 }
 
 // ============================================================
-// KPI Card Builder
+// KPI Card Builder (Airtable Demo-Card Geometry)
 // ============================================================
 function kpiCard(label, value, sub, color) {
-    const barClass = `kpi-bar kpi-bar-${color}`;
+    const accentMap = {
+        green: '#0a2e0e',
+        forest: '#0a2e0e',
+        blue: '#1b61c9',
+        coral: '#aa2d00',
+        red: '#aa2d00',
+        yellow: '#d9a441',
+        purple: '#254fad',
+        gray: '#9297a0'
+    };
+    const barColor = accentMap[color] || '#181d26';
+    const isAlert = color === 'red' || color === 'coral';
+
     return `
-    <div class="bg-surface-card border border-border-subtle rounded-xl px-6 py-5 relative overflow-hidden transition-all duration-300 hover:border-border-medium hover:-translate-y-0.5 hover:shadow-lg group">
-        <div class="${barClass}"></div>
-        <div class="text-[0.75rem] font-medium text-gray-500 uppercase tracking-widest mb-2">${label}</div>
-        <div class="text-[1.7rem] font-extrabold tracking-tight leading-none mb-1 font-mono-data text-${color === 'coral' ? 'orange' : color === 'red' ? 'red' : color === 'yellow' ? 'yellow' : color === 'blue' ? 'blue' : color === 'purple' ? 'purple' : 'emerald'}-400">${value}</div>
-        <div class="text-[0.75rem] text-gray-500">${sub}</div>
+    <div class="kpi-card-shell" role="listitem">
+        <div class="kpi-accent-bar" style="background:${barColor};height:2px;" aria-hidden="true"></div>
+        <div class="kpi-lbl">${label}</div>
+        <div class="kpi-val" style="${isAlert ? 'color:#aa2d00;' : ''}">${value}</div>
+        <div class="kpi-sub">${sub}</div>
     </div>`;
 }
 
 // ============================================================
-// Table Builder
+// Table Builder (Airtable Editorial Tables)
 // ============================================================
 function buildTable(headers, rows, opts = {}) {
-    const thClass = 'bg-surface-elevated text-gray-400 font-semibold text-[0.73rem] uppercase tracking-widest px-3.5 py-2.5 text-left border-b border-border-medium whitespace-nowrap sticky top-0';
-    const tdClass = 'px-3.5 py-2.5 border-b border-border-subtle whitespace-nowrap text-[0.83rem]';
+    const thClass = 'th-cell';
+    const tdClass = 'td-cell';
 
-    let html = `<table class="w-full border-collapse text-[0.83rem]"><thead><tr>`;
+    let html = `<table class="data-table w-full${opts.tableClass ? ' ' + opts.tableClass : ''}"><thead><tr>`;
     headers.forEach((h, i) => {
-        const align = opts.alignRight?.includes(i) ? ' text-right' : '';
+        let align = '';
+        if (opts.alignRight?.includes(i)) align = ' text-right';
+        else if (opts.alignCenter?.includes(i)) align = ' text-center';
         html += `<th class="${thClass}${align}">${h}</th>`;
     });
     html += `</tr></thead><tbody>`;
     rows.forEach(row => {
-        html += `<tr class="hover:bg-white/[0.02] transition-colors">`;
+        html += `<tr>`;
         row.forEach((cell, i) => {
-            const align = opts.alignRight?.includes(i) ? ' text-right' : '';
+            let align = '';
+            if (opts.alignRight?.includes(i)) align = ' text-right';
+            else if (opts.alignCenter?.includes(i)) align = ' text-center';
             html += `<td class="${tdClass}${align}">${cell}</td>`;
         });
         html += `</tr>`;
@@ -115,7 +187,7 @@ function buildTable(headers, rows, opts = {}) {
 // Navigation
 // ============================================================
 function initNav() {
-    const links = document.querySelectorAll('.nav-link');
+    const links = document.querySelectorAll('#nav-module-gateway .nav-link');
     const sections = document.querySelectorAll('.content-section');
     const title = document.getElementById('pageTitle');
     const sidebar = document.getElementById('sidebar');
@@ -134,22 +206,39 @@ function initNav() {
         link.addEventListener('click', e => {
             e.preventDefault();
             const sec = link.dataset.section;
-            links.forEach(l => l.classList.remove('nav-link-active'));
+            links.forEach(l => {
+                l.classList.remove('nav-link-active');
+                l.removeAttribute('aria-current');
+            });
             link.classList.add('nav-link-active');
-            sections.forEach(s => { s.classList.add('hidden'); s.classList.remove('block'); });
+            link.setAttribute('aria-current', 'page');
+
+            sections.forEach(s => {
+                s.classList.add('hidden');
+                s.classList.remove('block');
+            });
             const target = document.getElementById(`section-${sec}`);
-            if (target) { target.classList.remove('hidden'); target.classList.add('block'); }
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('block');
+            }
             if (sec === 'ai-insights' && window.AI_DATA && typeof renderAINarratives === 'function') {
                 renderAINarratives(window.AI_DATA);
             }
-            title.textContent = titles[sec] || 'Dashboard';
-            sidebar.removeAttribute('data-open');
+            if (title) title.textContent = titles[sec] || 'Dashboard';
+            if (sidebar) sidebar.removeAttribute('data-open');
         });
     });
 
     menuToggle?.addEventListener('click', () => {
-        if (sidebar.hasAttribute('data-open')) sidebar.removeAttribute('data-open');
-        else sidebar.setAttribute('data-open', '');
+        if (!sidebar) return;
+        if (sidebar.hasAttribute('data-open')) {
+            sidebar.removeAttribute('data-open');
+            menuToggle.setAttribute('aria-expanded', 'false');
+        } else {
+            sidebar.setAttribute('data-open', '');
+            menuToggle.setAttribute('aria-expanded', 'true');
+        }
     });
 }
 
@@ -193,14 +282,17 @@ function renderDashboard() {
     const refundCount = (gA?.refund_count || 0) + (gB?.refund_count || 0);
     const refundVol = (gA?.refund_volume || 0) + (gB?.refund_volume || 0);
 
-    document.getElementById('kpiGrid').innerHTML = [
-        kpiCard('Total Volume', fmtCurrency(totalVolume), scopeSubtitle, 'green'),
-        kpiCard('Total Charges', fmtCurrency(totalCharges), `Effective rate: ${fmtPct(overallRate)}`, 'coral'),
-        cardA,
-        cardB,
-        cardFailed,
-        kpiCard('Refunds', fmt(refundCount), `₹${fmt(refundVol, 2)} total refunded`, 'yellow'),
-    ].join('');
+    const kpiEl = document.getElementById('kpiGrid');
+    if (kpiEl) {
+        kpiEl.innerHTML = [
+            kpiCard('Total Volume', fmtCurrency(totalVolume), scopeSubtitle, 'forest'),
+            kpiCard('Total Charges', fmtCurrency(totalCharges), `Effective rate: ${fmtPct(overallRate)}`, 'coral'),
+            cardA,
+            cardB,
+            cardFailed,
+            kpiCard('Refunds', fmt(refundCount), `₹${fmt(refundVol, 2)} total refunded`, 'yellow'),
+        ].join('');
+    }
 
     // Chart: Volume & Charges comparison
     const gwEntries = DATA.overview.gateways ? Object.entries(DATA.overview.gateways) : [
@@ -210,16 +302,12 @@ function renderDashboard() {
     const gwLabels = gwEntries.map(([name]) => name);
     const gwVolumes = gwEntries.map(([, obj]) => obj?.total_volume || 0);
     const gwCharges = gwEntries.map(([, obj]) => obj?.total_charges || 0);
-    const volColors = [COLORS.greenSoft, COLORS.blueSoft, COLORS.purpleSoft, COLORS.yellowSoft];
-    const volBorders = [COLORS.green, COLORS.blue, COLORS.purple, COLORS.yellow];
-    const chargeColors = [COLORS.coralSoft, COLORS.yellowSoft, COLORS.coralSoft, COLORS.blueSoft];
-    const chargeBorders = [COLORS.coral, COLORS.yellow, COLORS.coral, COLORS.blue];
 
     makeChart('chartVolumeCompare', 'bar', {
         labels: gwLabels,
         datasets: [
-            { label: 'Volume', data: gwVolumes, backgroundColor: gwLabels.map((_, i) => volColors[i % volColors.length]), borderColor: gwLabels.map((_, i) => volBorders[i % volBorders.length]), borderWidth: 1.5, borderRadius: 6, barPercentage: 0.5 },
-            { label: 'Charges', data: gwCharges, backgroundColor: gwLabels.map((_, i) => chargeColors[i % chargeColors.length]), borderColor: gwLabels.map((_, i) => chargeBorders[i % chargeBorders.length]), borderWidth: 1.5, borderRadius: 6, barPercentage: 0.5 },
+            { label: 'Volume', data: gwVolumes, backgroundColor: COLORS.forestSoft, borderColor: COLORS.forest, borderWidth: 1.5, borderRadius: 6, barPercentage: 0.5 },
+            { label: 'Charges', data: gwCharges, backgroundColor: COLORS.coralSoft, borderColor: COLORS.coral, borderWidth: 1.5, borderRadius: 6, barPercentage: 0.5 },
         ]
     }, { scales: { y: { ticks: { callback: v => '₹' + (v / 100000).toFixed(0) + 'L' } } } });
 
@@ -231,8 +319,8 @@ function renderDashboard() {
     makeChart('chartRateByNetwork', 'bar', {
         labels: netLabels,
         datasets: [
-            { label: 'Gateway A %', data: netRatesA, backgroundColor: COLORS.greenSoft, borderColor: COLORS.green, borderWidth: 1.5, borderRadius: 6, barPercentage: 0.6 },
-            { label: 'Gateway B %', data: netRatesB, backgroundColor: COLORS.purpleSoft, borderColor: COLORS.purple, borderWidth: 1.5, borderRadius: 6, barPercentage: 0.6 },
+            { label: 'Gateway A %', data: netRatesA, backgroundColor: COLORS.forestSoft, borderColor: COLORS.forest, borderWidth: 1.5, borderRadius: 6, barPercentage: 0.6 },
+            { label: 'Gateway B %', data: netRatesB, backgroundColor: COLORS.blueSoft, borderColor: COLORS.blue, borderWidth: 1.5, borderRadius: 6, barPercentage: 0.6 },
         ]
     }, {
         scales: { y: { ticks: { callback: v => v + '%' } } },
@@ -240,13 +328,13 @@ function renderDashboard() {
     });
 
     // Chart: Settlement distribution
-    const allSettleDays = new Set([...Object.keys(gA.settlement_distribution || {}), ...Object.keys(gB.settlement_distribution || {})]);
+    const allSettleDays = new Set([...Object.keys(gA?.settlement_distribution || {}), ...Object.keys(gB?.settlement_distribution || {})]);
     const settleDayLabels = [...allSettleDays].sort((a, b) => Number(a) - Number(b));
     makeChart('chartSettlement', 'bar', {
         labels: settleDayLabels.map(d => d + 'd'),
         datasets: [
-            { label: 'Gateway A', data: settleDayLabels.map(d => gA.settlement_distribution?.[d] || 0), backgroundColor: COLORS.greenSoft, borderColor: COLORS.green, borderWidth: 1.5, borderRadius: 4 },
-            { label: 'Gateway B', data: settleDayLabels.map(d => gB.settlement_distribution?.[d] || 0), backgroundColor: COLORS.purpleSoft, borderColor: COLORS.purple, borderWidth: 1.5, borderRadius: 4 },
+            { label: 'Gateway A', data: settleDayLabels.map(d => gA?.settlement_distribution?.[d] || 0), backgroundColor: COLORS.forestSoft, borderColor: COLORS.forest, borderWidth: 1.5, borderRadius: 4 },
+            { label: 'Gateway B', data: settleDayLabels.map(d => gB?.settlement_distribution?.[d] || 0), backgroundColor: COLORS.blueSoft, borderColor: COLORS.blue, borderWidth: 1.5, borderRadius: 4 },
         ]
     }, {
         plugins: { tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} transactions` } } },
@@ -254,45 +342,48 @@ function renderDashboard() {
     });
 
     // Chart: Volume by method (Gateway A)
-    const methods = Object.keys(DATA.by_method);
+    const methods = Object.keys(DATA.by_method || {});
     makeChart('chartByMethod', 'doughnut', {
         labels: methods.map(m => m.charAt(0).toUpperCase() + m.slice(1)),
         datasets: [{
             data: methods.map(m => DATA.by_method[m].volume),
-            backgroundColor: [COLORS.green, COLORS.blue, COLORS.coral, COLORS.yellow, COLORS.purple],
-            borderColor: '#16161f', borderWidth: 3, hoverOffset: 8
+            backgroundColor: [COLORS.forest, COLORS.blue, COLORS.coral, COLORS.mustard, COLORS.info],
+            borderColor: '#ffffff',
+            borderWidth: 2,
+            hoverOffset: 6
         }]
     }, {
         plugins: {
             legend: { position: 'right' },
-            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${fmtCurrency(ctx.parsed)} (${fmtPct(DATA.by_method[methods[ctx.dataIndex]].rate)})` } }
+            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${fmtCurrency(ctx.parsed)} (${fmtPct(DATA.by_method[methods[ctx.dataIndex]]?.rate)})` } }
         }
     });
 
     // Chart: Geography (Gateway B top 10)
-    const geoEntries = Object.entries(DATA.by_geography).slice(0, 10);
+    const geoEntries = Object.entries(DATA.by_geography || {}).slice(0, 10);
     makeChart('chartGeography', 'bar', {
         labels: geoEntries.map(([k]) => k),
         datasets: [{
             label: 'Volume',
             data: geoEntries.map(([, v]) => v.volume),
-            backgroundColor: geoEntries.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length] + '22'),
+            backgroundColor: geoEntries.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length] + '26'),
             borderColor: geoEntries.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]),
-            borderWidth: 1.5, borderRadius: 4
+            borderWidth: 1.5,
+            borderRadius: 4
         }]
     }, { indexAxis: 'y', scales: { x: { ticks: { callback: v => '₹' + (v / 100000).toFixed(0) + 'L' } } } });
 
     // Chart: Currency
-    const gwACurr = Object.entries(DATA.by_currency.gatewayA).slice(0, 6);
-    const gwBCurr = Object.entries(DATA.by_currency.gatewayB).slice(0, 6);
+    const gwACurr = Object.entries(DATA.by_currency?.gatewayA || {}).slice(0, 6);
+    const gwBCurr = Object.entries(DATA.by_currency?.gatewayB || {}).slice(0, 6);
     const allCurrLabels = [...new Set([...gwACurr.map(([k]) => k), ...gwBCurr.map(([k]) => k)])];
     const gwAMap = Object.fromEntries(gwACurr);
     const gwBMap = Object.fromEntries(gwBCurr);
     makeChart('chartCurrency', 'bar', {
         labels: allCurrLabels,
         datasets: [
-            { label: 'Gateway A', data: allCurrLabels.map(c => gwAMap[c]?.inr_volume || 0), backgroundColor: COLORS.greenSoft, borderColor: COLORS.green, borderWidth: 1.5, borderRadius: 4 },
-            { label: 'Gateway B', data: allCurrLabels.map(c => gwBMap[c]?.volume || 0), backgroundColor: COLORS.purpleSoft, borderColor: COLORS.purple, borderWidth: 1.5, borderRadius: 4 },
+            { label: 'Gateway A', data: allCurrLabels.map(c => gwAMap[c]?.inr_volume || 0), backgroundColor: COLORS.forestSoft, borderColor: COLORS.forest, borderWidth: 1.5, borderRadius: 4 },
+            { label: 'Gateway B', data: allCurrLabels.map(c => gwBMap[c]?.volume || 0), backgroundColor: COLORS.blueSoft, borderColor: COLORS.blue, borderWidth: 1.5, borderRadius: 4 },
         ]
     }, { scales: { y: { ticks: { callback: v => '₹' + (v / 100000).toFixed(0) + 'L' } } } });
 
@@ -302,314 +393,44 @@ function renderDashboard() {
         const b = DATA.by_card_network[n]?.gatewayB;
         const cheaper = (a && b) ? (a.rate < b.rate ? 'A' : 'B') : '—';
         return [
-            `<span class="font-semibold">${n}</span>`,
+            `<span class="font-semibold" style="color:var(--c-ink);">${n}</span>`,
             a ? fmt(a.count) : '—', a ? fmtCurrency(a.volume) : '—', a ? fmtCurrency(a.charges) : '—', a ? `<span class="font-mono-data">${fmtPct(a.rate)}</span>` : '—',
             b ? fmt(b.count) : '—', b ? fmtCurrency(b.volume) : '—', b ? fmtCurrency(b.charges) : '—', b ? `<span class="font-mono-data">${fmtPct(b.rate)}</span>` : '—',
             cheaper !== '—' ? `<span class="cell-good">Gateway ${cheaper}</span>` : '—'
         ];
     });
-    document.getElementById('comparisonTable').innerHTML = buildTable(
-        ['Network', 'A Txns', 'A Volume', 'A Charges', 'A Rate', 'B Txns', 'B Volume', 'B Charges', 'B Rate', 'Cheapest'],
-        compRows, { alignRight: [1, 2, 3, 4, 5, 6, 7, 8] }
-    );
+    const compTable = document.getElementById('comparisonTable');
+    if (compTable) {
+        compTable.innerHTML = buildTable(
+            ['Network', 'A Txns', 'A Volume', 'A Charges', 'A Rate', 'B Txns', 'B Volume', 'B Charges', 'B Rate', 'Cheapest'],
+            compRows, { alignRight: [1, 2, 3, 4, 5, 6, 7, 8] }
+        );
+    }
 
     // Table: Geography
-    const geoRows = Object.entries(DATA.by_geography).map(([country, d]) => [
-        `<span class="font-semibold">${country}</span>`,
+    const geoRows = Object.entries(DATA.by_geography || {}).map(([country, d]) => [
+        `<span class="font-semibold" style="color:var(--c-ink);">${country}</span>`,
         fmt(d.count), fmtCurrency(d.volume), fmtCurrency(d.charges),
         `<span class="font-mono-data">${fmtPct(d.rate)}</span>`
     ]);
-    document.getElementById('geographyTable').innerHTML = buildTable(
-        ['Country', 'Txns', 'Volume', 'Charges', 'Eff. Rate'],
-        geoRows, { alignRight: [1, 2, 3, 4] }
-    );
-}
-
-// ============================================================
-// Render: Reconciliation Section
-// ============================================================
-function renderReconciliation() {
-    const recon = DATA.reconciliation;
-    const oc = DATA.overcharges;
-    const refs = DATA.refunds_summary;
-
-    // KPIs
-    document.getElementById('reconKpiGrid').innerHTML = [
-        kpiCard('Reconciliation Mismatches', fmt(recon.total_mismatches), `Fee diff: ${fmtCurrency(recon.total_fee_diff)}`, 'yellow'),
-        kpiCard('Overcharges Found', fmt(oc.count), `Total: ${fmtCurrency(oc.total_overcharge)} recoverable`, 'red'),
-        kpiCard('Refunds (Gw A)', fmt(refs.gatewayA.count), `Volume: ${fmtCurrency(refs.gatewayA.volume)}`, 'coral'),
-        kpiCard('Refunds (Gw B)', fmt(refs.gatewayB.count), `Volume: ${fmtCurrency(refs.gatewayB.volume)}`, 'purple'),
-    ].join('');
-
-    document.getElementById('overchargeCount').textContent = `${oc.count} items`;
-    document.getElementById('mismatchCount').textContent = `${recon.total_mismatches} mismatches`;
-
-    // Overcharges table
-    const ocRows = oc.items.map(o => [
-        `<span class="font-mono-data text-[0.78rem] text-gray-400">${o.payment_id}</span>`,
-        o.currency,
-        `<span class="font-mono-data">${fmtCurrency(o.amount_inr)}</span>`,
-        o.method, o.international ? '🌍 Yes' : 'No',
-        o.card_network || '—',
-        `<span class="font-mono-data">${fmtPct(o.expected_rate)}</span>`,
-        `<span class="font-mono-data text-red-400">${fmtPct(o.actual_rate)}</span>`,
-        `<span class="font-mono-data">${fmtCurrency(o.expected_fee)}</span>`,
-        `<span class="font-mono-data text-red-400">${fmtCurrency(o.actual_fee)}</span>`,
-        `<span class="cell-bad">${fmtCurrency(o.overcharge)}</span>`,
-    ]);
-    document.getElementById('overchargesTable').innerHTML = buildTable(
-        ['Payment ID', 'CCY', 'Amount (INR)', 'Method', 'Intl', 'Network', 'Expected %', 'Actual %', 'Expected Fee', 'Actual Fee', 'Overcharge'],
-        ocRows, { alignRight: [2, 6, 7, 8, 9, 10] }
-    );
-
-    // Recon table
-    const reconRows = recon.mismatches.slice(0, 30).map(m => [
-        `<span class="font-mono-data text-[0.78rem] text-gray-400">${m.payment_id}</span>`,
-        m.issue || '',
-        m.currency || '—',
-        m.method || '—',
-        m.pay_fee != null ? `<span class="font-mono-data">${fmtCurrency(m.pay_fee)}</span>` : '—',
-        m.txn_fee != null ? `<span class="font-mono-data">${fmtCurrency(m.txn_fee)}</span>` : '—',
-        m.fee_diff != null ? `<span class="font-mono-data ${m.fee_diff !== 0 ? 'text-red-400' : ''}">${fmtCurrency(m.fee_diff)}</span>` : '—',
-        m.pay_tax != null ? `<span class="font-mono-data">${fmtCurrency(m.pay_tax)}</span>` : '—',
-        m.txn_tax != null ? `<span class="font-mono-data">${fmtCurrency(m.txn_tax)}</span>` : '—',
-        m.tax_diff != null ? `<span class="font-mono-data ${m.tax_diff !== 0 ? 'text-yellow-400' : ''}">${fmtCurrency(m.tax_diff)}</span>` : '—',
-    ]);
-    document.getElementById('reconTable').innerHTML = buildTable(
-        ['Payment ID', 'Issue', 'Currency', 'Method', 'Pay Fee', 'Txn Fee', 'Fee Diff', 'Pay Tax', 'Txn Tax', 'Tax Diff'],
-        reconRows, { alignRight: [4, 5, 6, 7, 8, 9] }
-    );
-
-    // Unsettled items info
-    if (recon.unsettled_count > 0) {
-        document.getElementById('reconTable').innerHTML += `<div class="mt-3 px-4 py-2 bg-yellow-400/10 text-yellow-400 rounded-lg text-[0.82rem]">⚠ ${recon.unsettled_count} captured payment(s) have no corresponding settlement transaction.</div>`;
+    const geoTable = document.getElementById('geographyTable');
+    if (geoTable) {
+        geoTable.innerHTML = buildTable(
+            ['Country', 'Txns', 'Volume', 'Charges', 'Eff. Rate'],
+            geoRows, { alignRight: [1, 2, 3, 4] }
+        );
     }
-
-    // Refund table
-    const refRows = [
-        ['Gateway A', fmt(refs.gatewayA.count), fmtCurrency(refs.gatewayA.volume), '—'],
-        ['Gateway B', fmt(refs.gatewayB.count), fmtCurrency(refs.gatewayB.volume), fmt(DATA.overview.gatewayB.dispute_count) + ' dispute(s)'],
-    ];
-    document.getElementById('refundTable').innerHTML = buildTable(
-        ['Gateway', 'Refund Count', 'Refund Volume', 'Disputes'],
-        refRows, { alignRight: [1, 2] }
-    );
 }
 
 // ============================================================
-// Render: Savings Section
+// Render: Time-Series (Weekly by default; Monthly toggle)
 // ============================================================
-function renderSavings() {
-    const sm = DATA.savings_model;
-    const oc = DATA.overcharges;
-
-    // KPIs
-    const totalSaving = sm.total_potential_saving;
-    const gwAVol = DATA.overview.gatewayA.total_volume;
-    const gwBVol = DATA.overview.gatewayB.total_volume;
-
-    document.getElementById('savingsKpiGrid').innerHTML = [
-        kpiCard('Potential Monthly Savings', fmtCurrency(totalSaving), 'By routing to cheapest gateway per network', 'green'),
-        kpiCard('Annualized Savings', fmtCurrency(totalSaving * 12), 'Projected at current volume', 'blue'),
-        kpiCard('Overcharges to Recover', fmtCurrency(oc.total_overcharge), `${oc.count} transactions above contracted rates`, 'red'),
-        kpiCard('Total Volume Analyzed', fmtCurrency(gwAVol + gwBVol), 'Across both gateways', 'purple'),
-    ].join('');
-
-    // Chart: Current vs Optimized
-    const savItems = sm.items;
-    makeChart('chartSavings', 'bar', {
-        labels: savItems.map(s => s.network),
-        datasets: [
-            { label: 'Current Charges', data: savItems.map(s => s.current_charges), backgroundColor: COLORS.coralSoft, borderColor: COLORS.coral, borderWidth: 1.5, borderRadius: 6 },
-            { label: 'Optimized Charges', data: savItems.map(s => s.optimized_charges), backgroundColor: COLORS.greenSoft, borderColor: COLORS.green, borderWidth: 1.5, borderRadius: 6 },
-        ]
-    }, { scales: { y: { ticks: { callback: v => '₹' + (v / 1000).toFixed(0) + 'K' } } } });
-
-    // Chart: Gateway recommendation
-    makeChart('chartRouting', 'bar', {
-        labels: savItems.map(s => s.network),
-        datasets: [
-            { label: 'Gateway A Rate', data: savItems.map(s => s.gateway_a_rate), backgroundColor: COLORS.greenSoft, borderColor: COLORS.green, borderWidth: 1.5, borderRadius: 6, barPercentage: 0.5 },
-            { label: 'Gateway B Rate', data: savItems.map(s => s.gateway_b_rate), backgroundColor: COLORS.purpleSoft, borderColor: COLORS.purple, borderWidth: 1.5, borderRadius: 6, barPercentage: 0.5 },
-        ]
-    }, {
-        scales: { y: { ticks: { callback: v => v + '%' } } },
-        plugins: { tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}%` } } }
-    });
-
-    // Savings table
-    const savRows = savItems.map(s => [
-        `<span class="font-semibold">${s.network}</span>`,
-        fmtCurrency(s.total_volume),
-        `<span class="font-mono-data">${fmtPct(s.gateway_a_rate)}</span>`,
-        `<span class="font-mono-data">${fmtPct(s.gateway_b_rate)}</span>`,
-        `<span class="cell-good">${s.cheapest_gateway}</span>`,
-        fmtCurrency(s.current_charges),
-        fmtCurrency(s.optimized_charges),
-        `<span class="font-mono-data font-bold text-emerald-400">${fmtCurrency(s.potential_saving)}</span>`,
-        `<span class="font-mono-data">${fmtPct(s.saving_pct)}</span>`,
-    ]);
-    savRows.push([
-        '<span class="font-bold text-gray-100">TOTAL</span>', fmtCurrency(savItems.reduce((a, s) => a + s.total_volume, 0)),
-        '', '', '',
-        `<span class="font-bold">${fmtCurrency(savItems.reduce((a, s) => a + s.current_charges, 0))}</span>`,
-        `<span class="font-bold">${fmtCurrency(savItems.reduce((a, s) => a + s.optimized_charges, 0))}</span>`,
-        `<span class="font-mono-data font-bold text-emerald-400 text-base">${fmtCurrency(totalSaving)}</span>`,
-        ''
-    ]);
-    document.getElementById('savingsTable').innerHTML = buildTable(
-        ['Network', 'Total Volume', 'Gw A Rate', 'Gw B Rate', 'Cheapest', 'Current Charges', 'Optimized', 'Saving', 'Saving %'],
-        savRows, { alignRight: [1, 2, 3, 5, 6, 7, 8] }
-    );
-
-    // Contracted rates table
-    const cr = oc.contracted_rates;
-    const crRows = [
-        ['Gateway A', 'Domestic Card', fmtPct(cr.domestic_card), '—'],
-        ['Gateway A', 'International Card', fmtPct(cr.intl_card), '—'],
-        ['Gateway A', 'UPI', fmtPct(cr.upi), '—'],
-        ['Gateway A', 'EMI', fmtPct(cr.emi), '—'],
-    ];
-    document.getElementById('contractedRatesTable').innerHTML = buildTable(
-        ['Gateway', 'Payment Type', 'Contracted Rate', 'Notes'],
-        crRows, { alignRight: [2] }
-    );
-}
-
-// ============================================================
-// Render: Executive Summary
-// ============================================================
-function renderExecutive() {
-    const gA = DATA.overview.gatewayA;
-    const gB = DATA.overview.gatewayB;
-    const sm = DATA.savings_model;
-    const oc = DATA.overcharges;
-    const recon = DATA.reconciliation;
-    const hasA = DATA.has_gateway_a !== false && gA && gA.total_volume > 0;
-    const hasB = DATA.has_gateway_b !== false && gB && gB.total_volume > 0;
-
-    const totalVol = (gA?.total_volume || 0) + (gB?.total_volume || 0);
-    const totalCharges = (gA?.total_charges || 0) + (gB?.total_charges || 0);
-    const blendedRate = totalVol > 0 ? (totalCharges / totalVol * 100) : 0;
-
-    let gatewayVolumeItems = '';
-    if (hasA && hasB) {
-        gatewayVolumeItems = `
-            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway A: ${fmtCurrency(gA.total_volume)} at <strong class="text-emerald-400">${fmtPct(gA.effective_rate)}</strong> effective rate</li>
-            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway B: ${fmtCurrency(gB.total_volume)} at <strong class="text-purple-400">${fmtPct(gB.effective_rate)}</strong> effective rate — <strong class="text-red-400">${fmtPct(gB.effective_rate - gA.effective_rate)} higher</strong> than Gateway A</li>
-        `;
-    } else if (hasA) {
-        gatewayVolumeItems = `
-            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway A (Master Enriched Table): ${fmtCurrency(gA.total_volume)} at <strong class="text-emerald-400">${fmtPct(gA.effective_rate)}</strong> effective rate</li>
-            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway B: Not active. (Upload Gateway B consolidated file to unlock comparative analytics)</li>
-        `;
-    } else if (hasB) {
-        gatewayVolumeItems = `
-            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway B (Consolidated Ledger): ${fmtCurrency(gB.total_volume)} at <strong class="text-purple-400">${fmtPct(gB.effective_rate)}</strong> effective rate</li>
-            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway A: Not active. (Upload Gateway A split files to unlock comparative analytics)</li>
-        `;
-    }
-
-    let settlementItems = '';
-    if (hasA && hasB) {
-        settlementItems = `
-            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway A average settlement: <strong class="text-gray-100">${gA.avg_settlement_days} days</strong> (range: ${gA.min_settlement_days}–${gA.max_settlement_days} days)</li>
-            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway B average settlement: <strong class="text-gray-100">${gB.avg_settlement_days} days</strong> (range: ${gB.min_settlement_days}–${gB.max_settlement_days} days)</li>
-            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">${gA.avg_settlement_days < gB.avg_settlement_days ? 'Gateway A settles faster' : 'Gateway B settles faster'} — cash flow advantage of <strong class="text-gray-100">${Math.abs(gA.avg_settlement_days - gB.avg_settlement_days).toFixed(1)} days</strong></li>
-        `;
-    } else if (hasA) {
-        settlementItems = `
-            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway A average settlement: <strong class="text-gray-100">${gA.avg_settlement_days} days</strong> (range: ${gA.min_settlement_days}–${gA.max_settlement_days} days)</li>
-        `;
-    } else if (hasB) {
-        settlementItems = `
-            <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway B average settlement: <strong class="text-gray-100">${gB.avg_settlement_days} days</strong> (range: ${gB.min_settlement_days}–${gB.max_settlement_days} days)</li>
-        `;
-    }
-
-    document.getElementById('execSummary').innerHTML = `
-        <h2 class="text-[2rem] font-extrabold tracking-tighter mb-2 bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">Payment Gateway Analysis</h2>
-        <p class="text-[0.88rem] text-gray-500 mb-8">Executive Summary · ${DATA.period} · Generated ${new Date(DATA.generated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-
-        <div class="mb-7">
-            <h3 class="text-[1.08rem] font-bold mb-3 pb-2 border-b border-border-subtle flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> Volume & Cost Overview
-            </h3>
-            <ul class="list-none space-y-1">
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Total processed volume: <strong class="text-gray-100">${fmtCurrency(totalVol)}</strong> across <strong class="text-gray-100">${fmt((gA?.txn_count || 0) + (gB?.txn_count || 0))}</strong> transactions</li>
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Total gateway charges: <strong class="text-gray-100">${fmtCurrency(totalCharges)}</strong> (blended rate: <strong class="text-gray-100">${fmtPct(blendedRate)}</strong>)</li>
-                ${gatewayVolumeItems}
-            </ul>
-        </div>
-
-        <div class="mb-7">
-            <h3 class="text-[1.08rem] font-bold mb-3 pb-2 border-b border-border-subtle flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span> Settlement Performance
-            </h3>
-            <ul class="list-none space-y-1">
-                ${settlementItems}
-            </ul>
-        </div>
-
-        <div class="mb-7">
-            <h3 class="text-[1.08rem] font-bold mb-3 pb-2 border-b border-border-subtle flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-red-400 inline-block"></span> Issues & Recovery
-            </h3>
-            <ul class="list-none space-y-1">
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600"><strong class="text-red-400">${fmt(oc.count)} overcharged transactions</strong> detected on Gateway A, totaling <strong class="text-red-400">${fmtCurrency(oc.total_overcharge)}</strong> recoverable</li>
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600"><strong class="text-yellow-400">${fmt(recon.total_mismatches)} reconciliation mismatches</strong> between payment and transaction records</li>
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway A failure rate: <strong class="text-gray-100">${fmtPct(DATA.failed_transactions.gatewayA.failure_rate)}</strong> (${fmt(DATA.failed_transactions.gatewayA.count)} of ${fmt(DATA.failed_transactions.gatewayA.total)})</li>
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Gateway B standalone fees (non-transaction): <strong class="text-gray-100">${fmtCurrency(gB.standalone_fees)}</strong></li>
-            </ul>
-        </div>
-
-        <div class="mb-7">
-            <h3 class="text-[1.08rem] font-bold mb-3 pb-2 border-b border-border-subtle flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> Savings Opportunity
-            </h3>
-            <ul class="list-none space-y-1">
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Monthly savings from optimal routing: <strong class="text-emerald-400">${fmtCurrency(sm.total_potential_saving)}</strong></li>
-                <li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">Annualized: <strong class="text-emerald-400">${fmtCurrency(sm.total_potential_saving * 12)}</strong></li>
-                ${sm.items.map(s => `<li class="pl-5 relative text-gray-400 text-[0.9rem] leading-relaxed before:content-['→'] before:absolute before:left-0 before:text-gray-600">${s.network}: route to <strong class="text-gray-100">${s.cheapest_gateway}</strong> (${fmtPct(Math.min(s.gateway_a_rate, s.gateway_b_rate))} vs ${fmtPct(Math.max(s.gateway_a_rate, s.gateway_b_rate))}) — saves <strong class="text-emerald-400">${fmtCurrency(s.potential_saving)}</strong>/mo</li>`).join('')}
-            </ul>
-        </div>
-
-        <div class="mb-7">
-            <h3 class="text-[1.08rem] font-bold mb-3 pb-2 border-b border-border-subtle flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-yellow-400 inline-block"></span> Recommended Actions
-            </h3>
-            <div class="grid grid-cols-2 gap-4 mt-3 max-lg:grid-cols-1">
-                <div class="bg-surface-card border border-border-subtle rounded-xl p-5 hover:border-border-medium hover:-translate-y-0.5 transition-all">
-                    <h4 class="text-[0.88rem] font-semibold mb-1.5 text-emerald-400">1. Recover Overcharges</h4>
-                    <p class="text-[0.8rem] text-gray-400 leading-relaxed">File claims for ${fmtCurrency(oc.total_overcharge)} in overcharges on ${fmt(oc.count)} Gateway A transactions that exceeded contracted rates.</p>
-                </div>
-                <div class="bg-surface-card border border-border-subtle rounded-xl p-5 hover:border-border-medium hover:-translate-y-0.5 transition-all">
-                    <h4 class="text-[0.88rem] font-semibold mb-1.5 text-emerald-400">2. Implement Smart Routing</h4>
-                    <p class="text-[0.8rem] text-gray-400 leading-relaxed">Route each card network to its cheapest gateway to save ${fmtCurrency(sm.total_potential_saving)}/month (${fmtCurrency(sm.total_potential_saving * 12)}/year).</p>
-                </div>
-                <div class="bg-surface-card border border-border-subtle rounded-xl p-5 hover:border-border-medium hover:-translate-y-0.5 transition-all">
-                    <h4 class="text-[0.88rem] font-semibold mb-1.5 text-emerald-400">3. Renegotiate Gateway B Rates</h4>
-                    <p class="text-[0.8rem] text-gray-400 leading-relaxed">Gateway B's ${fmtPct(gB.effective_rate)} blended rate is ${fmtPct(gB.effective_rate - gA.effective_rate)} above Gateway A. Negotiate toward parity using volume leverage.</p>
-                </div>
-                <div class="bg-surface-card border border-border-subtle rounded-xl p-5 hover:border-border-medium hover:-translate-y-0.5 transition-all">
-                    <h4 class="text-[0.88rem] font-semibold mb-1.5 text-emerald-400">4. Resolve Reconciliation Gaps</h4>
-                    <p class="text-[0.8rem] text-gray-400 leading-relaxed">Investigate ${fmt(recon.total_mismatches)} mismatches between payment and settlement records. Total fee discrepancy: ${fmtCurrency(recon.total_fee_diff)}.</p>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// ============================================================
-// Render: Time-Series (Weekly by default; Monthly toggle if >1 month)
-// ============================================================
-let _tsCharts = {};   // holds Chart instances so we can destroy before redraw
+let _tsCharts = {};
 
 function renderTimeseries() {
     const ts = DATA.timeseries;
     if (!ts) return;
 
-    // Show/hide Monthly button based on whether data spans more than 1 month
     const allMonthsA = (ts.monthly?.gatewayA || []).map(m => m.period);
     const allMonthsB = (ts.monthly?.gatewayB || []).map(m => m.period);
     const uniqueMonths = new Set([...allMonthsA, ...allMonthsB]);
@@ -623,9 +444,11 @@ function renderTimeseries() {
 
 function drawTimeseries(granularity) {
     const ts = DATA.timeseries;
+    if (!ts) return;
     const src = granularity === 'monthly' ? ts.monthly : ts.weekly;
-    const wa = src.gatewayA;
-    const wb = src.gatewayB;
+    if (!src) return;
+    const wa = src.gatewayA || [];
+    const wb = src.gatewayB || [];
     const labels = [...new Set([...wa.map(w => w.period), ...wb.map(w => w.period)])].sort();
     const waMap = Object.fromEntries(wa.map(w => [w.period, w]));
     const wbMap = Object.fromEntries(wb.map(w => [w.period, w]));
@@ -634,9 +457,8 @@ function drawTimeseries(granularity) {
     // Update toggle button styles
     document.querySelectorAll('.ts-tab').forEach(btn => {
         const isActive = btn.id === (granularity === 'monthly' ? 'btnTsMonthly' : 'btnTsWeekly');
-        btn.className = isActive
-            ? 'ts-tab px-3 py-1 rounded-lg text-[0.75rem] font-semibold transition-all bg-emerald-400/10 text-emerald-400 border border-emerald-400/30'
-            : 'ts-tab px-3 py-1 rounded-lg text-[0.75rem] font-semibold transition-all text-gray-500 border border-transparent hover:text-gray-300';
+        btn.classList.toggle('ts-tab-active', isActive);
+        btn.classList.toggle('active', isActive);
     });
 
     // Update section heading labels
@@ -658,8 +480,8 @@ function drawTimeseries(granularity) {
     _tsCharts['chartWeeklyVolume'] = makeChart('chartWeeklyVolume', 'line', {
         labels,
         datasets: [
-            { label: 'Gateway A Volume', data: labels.map(l => waMap[l]?.volume || 0), borderColor: COLORS.green, backgroundColor: COLORS.greenSoft, fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: COLORS.green },
-            { label: 'Gateway B Volume', data: labels.map(l => wbMap[l]?.volume || 0), borderColor: COLORS.purple, backgroundColor: COLORS.purpleSoft, fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: COLORS.purple },
+            { label: 'Gateway A Volume', data: labels.map(l => waMap[l]?.volume || 0), borderColor: COLORS.forest, backgroundColor: COLORS.forestSoft, fill: true, tension: 0.35, pointRadius: 4, pointBackgroundColor: COLORS.forest },
+            { label: 'Gateway B Volume', data: labels.map(l => wbMap[l]?.volume || 0), borderColor: COLORS.blue, backgroundColor: COLORS.blueSoft, fill: true, tension: 0.35, pointRadius: 4, pointBackgroundColor: COLORS.blue },
         ]
     }, { scales: { y: { ticks: { callback: v => '₹' + (v / 100000).toFixed(1) + 'L' } } } });
 
@@ -667,8 +489,8 @@ function drawTimeseries(granularity) {
     _tsCharts['chartWeeklyRate'] = makeChart('chartWeeklyRate', 'line', {
         labels,
         datasets: [
-            { label: 'Gateway A Rate %', data: labels.map(l => waMap[l]?.rate || 0), borderColor: COLORS.green, backgroundColor: 'transparent', tension: 0.4, pointRadius: 4, pointBackgroundColor: COLORS.green, borderWidth: 2 },
-            { label: 'Gateway B Rate %', data: labels.map(l => wbMap[l]?.rate || 0), borderColor: COLORS.purple, backgroundColor: 'transparent', tension: 0.4, pointRadius: 4, pointBackgroundColor: COLORS.purple, borderWidth: 2 },
+            { label: 'Gateway A Rate %', data: labels.map(l => waMap[l]?.rate || 0), borderColor: COLORS.forest, backgroundColor: 'transparent', tension: 0.35, pointRadius: 4, pointBackgroundColor: COLORS.forest, borderWidth: 2 },
+            { label: 'Gateway B Rate %', data: labels.map(l => wbMap[l]?.rate || 0), borderColor: COLORS.blue, backgroundColor: 'transparent', tension: 0.35, pointRadius: 4, pointBackgroundColor: COLORS.blue, borderWidth: 2 },
         ]
     }, { scales: { y: { ticks: { callback: v => v + '%' } } }, plugins: { tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtPct(ctx.parsed.y)}` } } } });
 
@@ -676,14 +498,14 @@ function drawTimeseries(granularity) {
     _tsCharts['chartWeeklySettle'] = makeChart('chartWeeklySettle', 'bar', {
         labels,
         datasets: [
-            { label: 'Gateway A Avg Settlement (days)', data: labels.map(l => waMap[l]?.avg_settlement_days || 0), backgroundColor: COLORS.greenSoft, borderColor: COLORS.green, borderWidth: 1.5, borderRadius: 4 },
-            { label: 'Gateway B Avg Settlement (days)', data: labels.map(l => wbMap[l]?.avg_settlement_days || 0), backgroundColor: COLORS.purpleSoft, borderColor: COLORS.purple, borderWidth: 1.5, borderRadius: 4 },
+            { label: 'Gateway A Avg Settlement (days)', data: labels.map(l => waMap[l]?.avg_settlement_days || 0), backgroundColor: COLORS.forestSoft, borderColor: COLORS.forest, borderWidth: 1.5, borderRadius: 4 },
+            { label: 'Gateway B Avg Settlement (days)', data: labels.map(l => wbMap[l]?.avg_settlement_days || 0), backgroundColor: COLORS.blueSoft, borderColor: COLORS.blue, borderWidth: 1.5, borderRadius: 4 },
         ]
     }, { scales: { y: { ticks: { callback: v => v + 'd' } } }, plugins: { tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}d` } } } });
 
     // Breakdown table
     const rows = labels.map(k => [
-        `<span class="font-mono-data text-gray-300">${k}</span>`,
+        `<span class="font-mono-data" style="color:var(--c-ink);font-weight:600;">${k}</span>`,
         `<span class="font-mono-data">${fmtCurrency(waMap[k]?.volume || 0)}</span>`,
         `<span class="font-mono-data">${fmtCurrency(waMap[k]?.charges || 0)}</span>`,
         `<span class="font-mono-data">${fmtPct(waMap[k]?.rate || 0)}</span>`,
@@ -703,7 +525,178 @@ function drawTimeseries(granularity) {
 }
 
 // ============================================================
-// Render: FX / Cross-Border Analysis (injected into Savings)
+// Render: Reconciliation Section
+// ============================================================
+function renderReconciliation() {
+    const recon = DATA.reconciliation || {};
+    const oc = DATA.overcharges || { items: [] };
+    const refs = DATA.refunds_summary || { gatewayA: {}, gatewayB: {} };
+
+    // KPIs
+    const reconKpiEl = document.getElementById('reconKpiGrid');
+    if (reconKpiEl) {
+        reconKpiEl.innerHTML = [
+            kpiCard('Reconciliation Mismatches', fmt(recon.total_mismatches), `Fee diff: ${fmtCurrency(recon.total_fee_diff)}`, 'yellow'),
+            kpiCard('Overcharges Found', fmt(oc.count), `Total: ${fmtCurrency(oc.total_overcharge)} recoverable`, 'coral'),
+            kpiCard('Refunds (Gw A)', fmt(refs.gatewayA?.count), `Volume: ${fmtCurrency(refs.gatewayA?.volume)}`, 'blue'),
+            kpiCard('Refunds (Gw B)', fmt(refs.gatewayB?.count), `Volume: ${fmtCurrency(refs.gatewayB?.volume)}`, 'purple'),
+        ].join('');
+    }
+
+    const ocBadge = document.getElementById('overchargeCount');
+    if (ocBadge) ocBadge.textContent = `${oc.count || 0} items`;
+    const mmBadge = document.getElementById('mismatchCount');
+    if (mmBadge) mmBadge.textContent = `${recon.total_mismatches || 0} mismatches`;
+
+    // Overcharges table
+    const ocRows = (oc.items || []).map(o => [
+        `<span class="font-mono-data text-xs" style="color:var(--c-muted);">${o.payment_id}</span>`,
+        o.currency,
+        `<span class="font-mono-data">${fmtCurrency(o.amount_inr)}</span>`,
+        o.method, o.international ? '🌍 Yes' : 'No',
+        o.card_network || '—',
+        `<span class="font-mono-data">${fmtPct(o.expected_rate)}</span>`,
+        `<span class="font-mono-data" style="color:var(--c-signature-coral);font-weight:600;">${fmtPct(o.actual_rate)}</span>`,
+        `<span class="font-mono-data">${fmtCurrency(o.expected_fee)}</span>`,
+        `<span class="font-mono-data" style="color:var(--c-signature-coral);font-weight:600;">${fmtCurrency(o.actual_fee)}</span>`,
+        `<span class="cell-bad">${fmtCurrency(o.overcharge)}</span>`,
+    ]);
+    const ocTable = document.getElementById('overchargesTable');
+    if (ocTable) {
+        ocTable.innerHTML = buildTable(
+            ['Payment ID', 'CCY', 'Amount (INR)', 'Method', 'Intl', 'Network', 'Expected %', 'Actual %', 'Expected Fee', 'Actual Fee', 'Overcharge'],
+            ocRows, { alignRight: [2, 6, 7, 8, 9, 10] }
+        );
+    }
+
+    // Recon table
+    const reconRows = (recon.mismatches || []).slice(0, 30).map(m => [
+        `<span class="font-mono-data text-xs" style="color:var(--c-muted);">${m.payment_id}</span>`,
+        m.issue || '',
+        m.currency || '—',
+        m.method || '—',
+        m.pay_fee != null ? `<span class="font-mono-data">${fmtCurrency(m.pay_fee)}</span>` : '—',
+        m.txn_fee != null ? `<span class="font-mono-data">${fmtCurrency(m.txn_fee)}</span>` : '—',
+        m.fee_diff != null ? `<span class="font-mono-data" style="${m.fee_diff !== 0 ? 'color:var(--c-signature-coral);font-weight:600;' : ''}">${fmtCurrency(m.fee_diff)}</span>` : '—',
+        m.pay_tax != null ? `<span class="font-mono-data">${fmtCurrency(m.pay_tax)}</span>` : '—',
+        m.txn_tax != null ? `<span class="font-mono-data">${fmtCurrency(m.txn_tax)}</span>` : '—',
+        m.tax_diff != null ? `<span class="font-mono-data" style="${m.tax_diff !== 0 ? 'color:var(--c-signature-mustard);font-weight:600;' : ''}">${fmtCurrency(m.tax_diff)}</span>` : '—',
+    ]);
+    const reconTable = document.getElementById('reconTable');
+    if (reconTable) {
+        reconTable.innerHTML = buildTable(
+            ['Payment ID', 'Issue', 'Currency', 'Method', 'Pay Fee', 'Txn Fee', 'Fee Diff', 'Pay Tax', 'Txn Tax', 'Tax Diff'],
+            reconRows, { alignRight: [4, 5, 6, 7, 8, 9] }
+        );
+        if (recon.unsettled_count > 0) {
+            reconTable.innerHTML += `<div style="margin-top:12px;padding:10px 14px;background:#fefae0;border:1px solid #f4d35e;color:#7c5800;border-radius:6px;font-size:0.8rem;">⚠️ ${recon.unsettled_count} captured payment(s) have no corresponding settlement transaction.</div>`;
+        }
+    }
+
+    // Refund table
+    const refRows = [
+        ['Gateway A', fmt(refs.gatewayA?.count), fmtCurrency(refs.gatewayA?.volume), '—'],
+        ['Gateway B', fmt(refs.gatewayB?.count), fmtCurrency(refs.gatewayB?.volume), fmt(DATA.overview?.gatewayB?.dispute_count || 0) + ' dispute(s)'],
+    ];
+    const refTable = document.getElementById('refundTable');
+    if (refTable) {
+        refTable.innerHTML = buildTable(
+            ['Gateway', 'Refund Count', 'Refund Volume', 'Disputes'],
+            refRows, { alignRight: [1, 2] }
+        );
+    }
+}
+
+// ============================================================
+// Render: Savings Section
+// ============================================================
+function renderSavings() {
+    const sm = DATA.savings_model || { items: [] };
+    const oc = DATA.overcharges || {};
+
+    const totalSaving = sm.total_potential_saving || 0;
+    const gwAVol = DATA.overview?.gatewayA?.total_volume || 0;
+    const gwBVol = DATA.overview?.gatewayB?.total_volume || 0;
+
+    const savKpi = document.getElementById('savingsKpiGrid');
+    if (savKpi) {
+        savKpi.innerHTML = [
+            kpiCard('Potential Monthly Savings', fmtCurrency(totalSaving), 'By routing to cheapest gateway per network', 'forest'),
+            kpiCard('Annualized Savings', fmtCurrency(totalSaving * 12), 'Projected at current volume', 'blue'),
+            kpiCard('Overcharges to Recover', fmtCurrency(oc.total_overcharge), `${oc.count || 0} transactions above contracted rates`, 'coral'),
+            kpiCard('Total Volume Analyzed', fmtCurrency(gwAVol + gwBVol), 'Across both gateways', 'purple'),
+        ].join('');
+    }
+
+    // Chart: Current vs Optimized
+    const savItems = sm.items || [];
+    makeChart('chartSavings', 'bar', {
+        labels: savItems.map(s => s.network),
+        datasets: [
+            { label: 'Current Charges', data: savItems.map(s => s.current_charges), backgroundColor: COLORS.coralSoft, borderColor: COLORS.coral, borderWidth: 1.5, borderRadius: 6 },
+            { label: 'Optimized Charges', data: savItems.map(s => s.optimized_charges), backgroundColor: COLORS.forestSoft, borderColor: COLORS.forest, borderWidth: 1.5, borderRadius: 6 },
+        ]
+    }, { scales: { y: { ticks: { callback: v => '₹' + (v / 1000).toFixed(0) + 'K' } } } });
+
+    // Chart: Gateway recommendation
+    makeChart('chartRouting', 'bar', {
+        labels: savItems.map(s => s.network),
+        datasets: [
+            { label: 'Gateway A Rate', data: savItems.map(s => s.gateway_a_rate), backgroundColor: COLORS.forestSoft, borderColor: COLORS.forest, borderWidth: 1.5, borderRadius: 6, barPercentage: 0.5 },
+            { label: 'Gateway B Rate', data: savItems.map(s => s.gateway_b_rate), backgroundColor: COLORS.blueSoft, borderColor: COLORS.blue, borderWidth: 1.5, borderRadius: 6, barPercentage: 0.5 },
+        ]
+    }, {
+        scales: { y: { ticks: { callback: v => v + '%' } } },
+        plugins: { tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}%` } } }
+    });
+
+    // Savings table
+    const savRows = savItems.map(s => [
+        `<span class="font-semibold" style="color:var(--c-ink);">${s.network}</span>`,
+        fmtCurrency(s.total_volume),
+        `<span class="font-mono-data">${fmtPct(s.gateway_a_rate)}</span>`,
+        `<span class="font-mono-data">${fmtPct(s.gateway_b_rate)}</span>`,
+        `<span class="cell-good">${s.cheapest_gateway}</span>`,
+        fmtCurrency(s.current_charges),
+        fmtCurrency(s.optimized_charges),
+        `<span class="font-mono-data font-bold" style="color:var(--c-signature-forest);">${fmtCurrency(s.potential_saving)}</span>`,
+        `<span class="font-mono-data">${fmtPct(s.saving_pct)}</span>`,
+    ]);
+    savRows.push([
+        '<span class="font-bold" style="color:var(--c-ink);">TOTAL</span>', fmtCurrency(savItems.reduce((a, s) => a + s.total_volume, 0)),
+        '', '', '',
+        `<span class="font-bold">${fmtCurrency(savItems.reduce((a, s) => a + s.current_charges, 0))}</span>`,
+        `<span class="font-bold">${fmtCurrency(savItems.reduce((a, s) => a + s.optimized_charges, 0))}</span>`,
+        `<span class="font-mono-data font-bold text-base" style="color:var(--c-signature-forest);">${fmtCurrency(totalSaving)}</span>`,
+        ''
+    ]);
+    const savTable = document.getElementById('savingsTable');
+    if (savTable) {
+        savTable.innerHTML = buildTable(
+            ['Network', 'Total Volume', 'Gw A Rate', 'Gw B Rate', 'Cheapest', 'Current Charges', 'Optimized', 'Saving', 'Saving %'],
+            savRows, { alignRight: [1, 2, 3, 5, 6, 7, 8] }
+        );
+    }
+
+    // Contracted rates table
+    const cr = oc.contracted_rates || {};
+    const crRows = [
+        ['Gateway A', 'Domestic Card', fmtPct(cr.domestic_card), '—'],
+        ['Gateway A', 'International Card', fmtPct(cr.intl_card), '—'],
+        ['Gateway A', 'UPI', fmtPct(cr.upi), '—'],
+        ['Gateway A', 'EMI', fmtPct(cr.emi), '—'],
+    ];
+    const crTable = document.getElementById('contractedRatesTable');
+    if (crTable) {
+        crTable.innerHTML = buildTable(
+            ['Gateway', 'Payment Type', 'Contracted Rate', 'Notes'],
+            crRows, { alignRight: [2] }
+        );
+    }
+}
+
+// ============================================================
+// Render: FX / Cross-Border Analysis
 // ============================================================
 function renderFXAnalysis() {
     const fx = DATA.fx_analysis;
@@ -712,12 +705,12 @@ function renderFXAnalysis() {
     const fxEl = document.getElementById('fxAnalysisContent');
     if (!fxEl) return;
 
-    const fxA = fx.gatewayA;
-    const fxB = fx.gatewayB;
+    const fxA = fx.gatewayA || { domestic: {}, international: {} };
+    const fxB = fx.gatewayB || { domestic: {}, international: {} };
 
     // KPI cards
     const kpis = [
-        kpiCard('Gw A Domestic Rate', fmtPct(fxA.domestic.rate), `${fmt(fxA.domestic.count)} txns · ${fmtCurrency(fxA.domestic.volume)}`, 'green'),
+        kpiCard('Gw A Domestic Rate', fmtPct(fxA.domestic.rate), `${fmt(fxA.domestic.count)} txns · ${fmtCurrency(fxA.domestic.volume)}`, 'forest'),
         kpiCard('Gw A Intl Rate', fmtPct(fxA.international.rate), `FX premium: +${fmtPct(fxA.fx_premium_pct)}pp`, 'coral'),
         kpiCard('Gw B Domestic Rate', fmtPct(fxB.domestic.rate), `${fmt(fxB.domestic.count)} txns · ${fmtCurrency(fxB.domestic.volume)}`, 'blue'),
         kpiCard('Gw B Intl Rate', fmtPct(fxB.international.rate), `FX premium: +${fmtPct(fxB.fx_premium_pct)}pp`, 'purple'),
@@ -725,19 +718,19 @@ function renderFXAnalysis() {
 
     // Gateway A — by currency
     const fxACurrRows = Object.entries(fxA.intl_by_currency || {}).map(([ccy, d]) => [
-        `<span class="font-semibold text-gray-200">${ccy}</span>`,
+        `<span class="font-semibold" style="color:var(--c-ink);">${ccy}</span>`,
         `<span class="font-mono-data">${fmtCurrency(d.volume)}</span>`,
         `<span class="font-mono-data">${fmtCurrency(d.charges)}</span>`,
-        `<span class="font-mono-data text-coral-400">${fmtPct(d.rate)}</span>`,
+        `<span class="font-mono-data" style="color:var(--c-signature-coral);font-weight:600;">${fmtPct(d.rate)}</span>`,
         `<span class="font-mono-data">${fmt(d.count)}</span>`,
     ]);
 
     // Gateway B — by country (top 10)
     const fxBCountryRows = Object.entries(fxB.intl_by_country || {}).slice(0, 10).map(([country, d]) => [
-        `<span class="font-semibold text-gray-200">${country}</span>`,
+        `<span class="font-semibold" style="color:var(--c-ink);">${country}</span>`,
         `<span class="font-mono-data">${fmtCurrency(d.volume)}</span>`,
         `<span class="font-mono-data">${fmtCurrency(d.charges)}</span>`,
-        `<span class="font-mono-data text-purple-400">${fmtPct(d.rate)}</span>`,
+        `<span class="font-mono-data" style="color:var(--c-link);font-weight:600;">${fmtPct(d.rate)}</span>`,
         `<span class="font-mono-data">${fmt(d.count)}</span>`,
     ]);
 
@@ -745,28 +738,28 @@ function renderFXAnalysis() {
         <div class="grid grid-cols-4 gap-4 mb-6 max-lg:grid-cols-2 max-sm:grid-cols-1">${kpis}</div>
         <div class="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
             <div>
-                <h4 class="text-[0.88rem] font-semibold text-gray-300 mb-3 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+                <h4 style="font-size:0.92rem;font-weight:500;color:var(--c-ink);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#0a2e0e;display:inline-block;" aria-hidden="true"></span>
                     Gateway A — International by Currency
                 </h4>
-                <div class="overflow-x-auto rounded-lg">
-                    ${fxACurrRows.length ? buildTable(['Currency', 'INR Volume', 'Charges', 'Eff Rate', 'Txns'], fxACurrRows, { alignRight: [1, 2, 3, 4] }) : '<p class="text-gray-500 text-sm">No international transactions</p>'}
+                <div class="tbl-wrap">
+                    ${fxACurrRows.length ? buildTable(['Currency', 'INR Volume', 'Charges', 'Eff Rate', 'Txns'], fxACurrRows, { alignRight: [1, 2, 3, 4] }) : '<p style="padding:16px;color:#75758a;font-size:0.85rem;">No international transactions</p>'}
                 </div>
             </div>
             <div>
-                <h4 class="text-[0.88rem] font-semibold text-gray-300 mb-3 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-purple-400 inline-block"></span>
+                <h4 style="font-size:0.92rem;font-weight:500;color:var(--c-ink);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#1b61c9;display:inline-block;" aria-hidden="true"></span>
                     Gateway B — International by Country (Top 10)
                 </h4>
-                <div class="overflow-x-auto rounded-lg">
-                    ${fxBCountryRows.length ? buildTable(['Country', 'INR Volume', 'Charges', 'Eff Rate', 'Txns'], fxBCountryRows, { alignRight: [1, 2, 3, 4] }) : '<p class="text-gray-500 text-sm">No international transactions</p>'}
+                <div class="tbl-wrap">
+                    ${fxBCountryRows.length ? buildTable(['Country', 'INR Volume', 'Charges', 'Eff Rate', 'Txns'], fxBCountryRows, { alignRight: [1, 2, 3, 4] }) : '<p style="padding:16px;color:#75758a;font-size:0.85rem;">No international transactions</p>'}
                 </div>
             </div>
         </div>`;
 }
 
 // ============================================================
-// Render: Rate Renegotiation (injected into Savings)
+// Render: Rate Renegotiation
 // ============================================================
 function renderRenegotiation() {
     const reco = DATA.renegotiation;
@@ -778,63 +771,72 @@ function renderRenegotiation() {
 
     // Action summary cards
     const summaryCards = (reco.summary || []).map((s, i) => `
-        <div class="flex gap-3 bg-surface-card border border-border-subtle rounded-xl p-4 hover:border-border-medium transition-all">
-            <div class="w-7 h-7 rounded-full bg-emerald-400/10 text-emerald-400 text-[0.75rem] font-bold flex items-center justify-center shrink-0">${i + 1}</div>
-            <p class="text-[0.83rem] text-gray-400 leading-relaxed">${s.replace(/^[0-9]+\.\s*/, '')}</p>
+        <div style="display:flex;gap:12px;background:#ffffff;border:1px solid #dddddd;border-radius:10px;padding:16px;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#0a2e0e;color:#ffffff;font-size:0.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i + 1}</div>
+            <p style="font-size:0.84rem;color:#333840;line-height:1.55;margin:0;">${s.replace(/^[0-9]+\.\s*/, '')}</p>
         </div>`).join('');
 
     // Category renegotiation table
     const catRows = (reco.by_category || []).map(c => [
-        `<span class="font-semibold text-gray-200">${c.category}</span>`,
+        `<span class="font-semibold" style="color:var(--c-ink);">${c.category}</span>`,
         `<span class="font-mono-data">${fmt(c.overcharge_count)}</span>`,
         `<span class="font-mono-data">${fmtCurrency(c.volume_affected)}</span>`,
-        `<span class="font-mono-data text-emerald-400">${fmtPct(c.contracted_rate)}</span>`,
-        `<span class="font-mono-data text-red-400">${fmtPct(c.avg_actual_rate)}</span>`,
-        `<span class="font-mono-data text-red-400 font-semibold">${fmtCurrency(c.total_overcharge)}</span>`,
+        `<span class="font-mono-data" style="color:var(--c-signature-forest);font-weight:600;">${fmtPct(c.contracted_rate)}</span>`,
+        `<span class="font-mono-data" style="color:var(--c-signature-coral);font-weight:600;">${fmtPct(c.avg_actual_rate)}</span>`,
+        `<span class="font-mono-data font-semibold" style="color:var(--c-signature-coral);">${fmtCurrency(c.total_overcharge)}</span>`,
     ]);
 
     // Network overcharge table
     const netRows = (reco.by_network || []).map(n => [
-        `<span class="font-semibold text-gray-200">${n.network}</span>`,
+        `<span class="font-semibold" style="color:var(--c-ink);">${n.network}</span>`,
         `<span class="font-mono-data">${fmt(n.overcharge_count)}</span>`,
-        `<span class="font-mono-data text-red-400 font-semibold">${fmtCurrency(n.total_overcharge)}</span>`,
-        `<span class="font-mono-data text-red-400">${fmtPct(n.avg_actual_rate)}</span>`,
+        `<span class="font-mono-data font-semibold" style="color:var(--c-signature-coral);">${fmtCurrency(n.total_overcharge)}</span>`,
+        `<span class="font-mono-data" style="color:var(--c-signature-coral);">${fmtPct(n.avg_actual_rate)}</span>`,
     ]);
 
     el.innerHTML = `
-        <div class="mb-6 p-5 bg-blue-500/5 border border-blue-500/20 rounded-xl">
-            <h4 class="text-[0.88rem] font-semibold text-blue-400 mb-2">Gateway Rate Comparison</h4>
-            <p class="text-[0.83rem] text-gray-400">${gc?.recommendation || ''}</p>
-            <div class="grid grid-cols-3 gap-4 mt-4 max-sm:grid-cols-1">
-                <div class="text-center"><div class="text-[0.75rem] text-gray-500 uppercase tracking-wide mb-1">Gateway A Rate</div><div class="text-[1.4rem] font-bold font-mono-data text-emerald-400">${fmtPct(gc?.gateway_a_rate)}</div></div>
-                <div class="text-center"><div class="text-[0.75rem] text-gray-500 uppercase tracking-wide mb-1">Gateway B Rate</div><div class="text-[1.4rem] font-bold font-mono-data text-purple-400">${fmtPct(gc?.gateway_b_rate)}</div></div>
-                <div class="text-center"><div class="text-[0.75rem] text-gray-500 uppercase tracking-wide mb-1">B vs A Premium</div><div class="text-[1.4rem] font-bold font-mono-data text-red-400">+${fmtPct(gc?.rate_premium_pp)}pp</div></div>
+        <div style="margin-bottom:24px;padding:20px 24px;background:#f8fafc;border:1px solid #dddddd;border-radius:12px;">
+            <h4 style="font-size:0.92rem;font-weight:600;color:var(--c-ink);margin-bottom:8px;">Gateway Rate Comparison</h4>
+            <p style="font-size:0.84rem;color:#41454d;line-height:1.5;margin:0 0 16px 0;">${gc?.recommendation || ''}</p>
+            <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;" class="max-sm:grid-cols-1">
+                <div style="text-align:center;padding:12px;background:#ffffff;border:1px solid #dddddd;border-radius:8px;">
+                    <div style="font-size:0.72rem;color:#75758a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Gateway A Rate</div>
+                    <div style="font-size:1.4rem;font-weight:600;color:#0a2e0e;" class="font-mono-data">${fmtPct(gc?.gateway_a_rate)}</div>
+                </div>
+                <div style="text-align:center;padding:12px;background:#ffffff;border:1px solid #dddddd;border-radius:8px;">
+                    <div style="font-size:0.72rem;color:#75758a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Gateway B Rate</div>
+                    <div style="font-size:1.4rem;font-weight:600;color:#1b61c9;" class="font-mono-data">${fmtPct(gc?.gateway_b_rate)}</div>
+                </div>
+                <div style="text-align:center;padding:12px;background:#ffffff;border:1px solid #dddddd;border-radius:8px;">
+                    <div style="font-size:0.72rem;color:#75758a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">B vs A Premium</div>
+                    <div style="font-size:1.4rem;font-weight:600;color:#aa2d00;" class="font-mono-data">+${fmtPct(gc?.rate_premium_pp)}pp</div>
+                </div>
             </div>
         </div>
 
-        <div class="mb-6">
-            <h4 class="text-[0.88rem] font-semibold text-gray-300 mb-3">Action Plan</h4>
-            <div class="grid grid-cols-1 gap-2">${summaryCards}</div>
+        <div style="margin-bottom:24px;">
+            <h4 style="font-size:0.92rem;font-weight:600;color:var(--c-ink);margin-bottom:12px;">Action Plan</h4>
+            <div style="display:grid;grid-template-columns:1fr;gap:10px;">${summaryCards}</div>
         </div>
 
         <div class="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
             <div>
-                <h4 class="text-[0.88rem] font-semibold text-gray-300 mb-3">Overcharges by Category</h4>
-                <div class="overflow-x-auto rounded-lg">
-                    ${catRows.length ? buildTable(['Category', 'Count', 'Volume', 'Contracted %', 'Actual %', 'Overcharge'], catRows, { alignRight: [1, 2, 3, 4, 5] }) : '<p class="text-gray-500 text-sm">No overcharges found</p>'}
+                <h4 style="font-size:0.92rem;font-weight:600;color:var(--c-ink);margin-bottom:12px;">Overcharges by Category</h4>
+                <div class="tbl-wrap">
+                    ${catRows.length ? buildTable(['Category', 'Count', 'Volume', 'Contracted %', 'Actual %', 'Overcharge'], catRows, { alignRight: [1, 2, 3, 4, 5] }) : '<p style="padding:16px;color:#75758a;font-size:0.85rem;">No overcharges found</p>'}
                 </div>
             </div>
             <div>
-                <h4 class="text-[0.88rem] font-semibold text-gray-300 mb-3">Overcharges by Card Network</h4>
-                <div class="overflow-x-auto rounded-lg">
-                    ${netRows.length ? buildTable(['Network', 'Count', 'Total Overcharge', 'Avg Actual Rate'], netRows, { alignRight: [1, 2, 3] }) : '<p class="text-gray-500 text-sm">No overcharges found</p>'}
+                <h4 style="font-size:0.92rem;font-weight:600;color:var(--c-ink);margin-bottom:12px;">Overcharges by Card Network</h4>
+                <div class="tbl-wrap">
+                    ${netRows.length ? buildTable(['Network', 'Count', 'Total Overcharge', 'Avg Actual Rate'], netRows, { alignRight: [1, 2, 3] }) : '<p style="padding:16px;color:#75758a;font-size:0.85rem;">No overcharges found</p>'}
                 </div>
             </div>
         </div>`;
 }
 
 // ============================================================
-// AI Narratives Renderer
+// AI Narratives Renderer (Airtable Signature Voltage Surfaces)
 // ============================================================
 function renderAINarratives(aiData) {
     if (aiData) {
@@ -851,117 +853,114 @@ function renderAINarratives(aiData) {
     const fx = AI_DATA.sections.fx_and_treasury_audit || {};
     const modelUsed = AI_DATA.model || 'Gemini 3.5 Flash-Lite';
 
-    // 1. Dashboard Banner
+    // 1. Dashboard Banner — Signature Cream Callout Card
     const dbEl = document.getElementById('aiDashboardBanner');
     if (dbEl && exec.headline) {
         const findingsBadges = (exec.key_findings || []).map(f => {
-            const badgeColor = f.impact?.toLowerCase() === 'high' ? 'bg-red-400/10 text-red-400 border-red-400/30' : 'bg-yellow-400/10 text-yellow-400 border-yellow-400/30';
+            const isHigh = f.impact?.toLowerCase() === 'high';
             return `
-                <div class="p-3 bg-surface border border-border-subtle rounded-lg">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-[0.72rem] font-semibold text-gray-400 uppercase tracking-wider">${f.metric}</span>
-                        <span class="text-[0.65rem] font-bold uppercase px-1.5 py-0.5 rounded border ${badgeColor}">${f.impact} Impact</span>
+                <div style="padding:14px;background:#ffffff;border:1px solid #ebd9be;border-radius:8px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                        <span style="font-size:0.72rem;font-weight:600;color:#75758a;text-transform:uppercase;letter-spacing:0.06em;">${f.metric}</span>
+                        <span style="font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:4px;background:${isHigh ? '#fff2ea' : '#fefae0'};color:${isHigh ? '#aa2d00' : '#7c5800'};border:1px solid ${isHigh ? '#fcab79' : '#f4d35e'};">${f.impact} Impact</span>
                     </div>
-                    <div class="text-[0.82rem] text-gray-200">${f.finding}</div>
+                    <div style="font-size:0.84rem;color:#181d26;line-height:1.4;">${f.finding}</div>
                 </div>
             `;
         }).join('');
 
         dbEl.innerHTML = `
-            <div class="p-6 bg-gradient-to-r from-emerald-950/40 via-surface-card to-blue-950/30 border border-emerald-500/30 rounded-xl relative overflow-hidden shadow-lg">
-                <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <div class="flex items-center gap-2.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <h3 class="text-[0.98rem] font-bold text-gray-100 tracking-tight flex items-center gap-2">
-                            AI Executive Briefing
-                        </h3>
+            <div class="signature-cream-card" style="margin-bottom:24px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span class="chip" style="background:#ffffff;color:#181d26;border-color:#dddddd;font-weight:600;">AI Executive Briefing</span>
+                        <span style="font-size:0.75rem;color:#41454d;font-family:var(--f-mono);">Analyzed by ${modelUsed}</span>
                     </div>
-                    <a href="#ai-insights" onclick="document.querySelector('[data-section=\\'ai-insights\\']')?.click()" class="text-[0.78rem] text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1 transition-colors">
-                        Explore Full AI Audit & Dispute Letter &rarr;
+                    <a href="#ai-insights" onclick="document.querySelector('[data-section=\\'ai-insights\\']')?.click()" class="btn-primary" style="text-decoration:none;font-size:0.8rem;padding:8px 18px;">
+                        Explore Full AI Audit &amp; Dispute Letter &rarr;
                     </a>
                 </div>
-                <h4 class="text-[1.05rem] font-semibold text-emerald-300 mb-2">${exec.headline}</h4>
-                <p class="text-[0.85rem] text-gray-300 leading-relaxed mb-4">${exec.plain_english_summary}</p>
-                <div class="grid grid-cols-3 gap-3 max-md:grid-cols-1">
+                <h3 style="font-size:1.35rem;font-weight:500;color:#181d26;margin-bottom:8px;letter-spacing:-0.01em;">${exec.headline}</h3>
+                <p style="font-size:0.88rem;color:#333840;line-height:1.55;margin-bottom:20px;">${exec.plain_english_summary}</p>
+                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;" class="max-md:grid-cols-1">
                     ${findingsBadges}
                 </div>
             </div>
         `;
     }
 
-    // 2. Reconciliation Banner (Overcharge Explanation & Next Steps)
+    // 2. Reconciliation Banner — Full-Bleed Signature Coral Card
     const reconEl = document.getElementById('aiReconBanner');
     if (reconEl && oc.plain_english_explanation) {
         const evidenceCards = (oc.evidence_summary || []).map(e => `
-            <div class="p-2.5 bg-surface/70 border border-border-subtle rounded-lg text-xs">
-                <span class="block text-gray-400 font-medium mb-0.5">${e.label}</span>
-                <span class="block text-gray-200 font-semibold">${e.detail}</span>
+            <div style="padding:10px 14px;background:#ffffff;border:1px solid #ebd9be;border-radius:8px;">
+                <span style="display:block;font-size:0.72rem;color:#75758a;font-weight:500;margin-bottom:2px;">${e.label}</span>
+                <span style="display:block;font-size:0.82rem;color:#181d26;font-weight:600;">${e.detail}</span>
             </div>
         `).join('');
 
         const stepsList = (oc.recommended_investigation_steps || []).map((step, idx) => `
-            <li class="flex items-start gap-2 text-[0.82rem] text-gray-300">
-                <span class="w-5 h-5 rounded-full bg-red-400/10 text-red-400 flex items-center justify-center shrink-0 text-[0.7rem] font-bold mt-0.5">${idx + 1}</span>
+            <li style="display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;color:#333840;margin-bottom:8px;">
+                <span style="width:20px;height:20px;border-radius:50%;background:#aa2d00;color:#ffffff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;font-weight:700;margin-top:2px;">${idx + 1}</span>
                 <span>${step}</span>
             </li>
         `).join('');
 
         reconEl.innerHTML = `
-            <div class="p-6 bg-surface-card border border-red-500/30 rounded-xl mb-5 shadow-lg relative">
-                <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[0.68rem] font-bold uppercase tracking-wider bg-red-400/15 text-red-400 border border-red-400/30">AI Investigation</span>
-                        <h3 class="text-[1.02rem] font-bold text-gray-100">${oc.title || 'Overcharge & Tariff Violation Audit'}</h3>
+            <div class="signature-coral-card" style="margin-bottom:24px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span class="chip" style="background:#ffffff;color:#aa2d00;border-color:rgba(255,255,255,0.4);font-weight:700;">AI Investigation</span>
+                        <h3 style="font-size:1.25rem;font-weight:500;color:#ffffff;margin:0;">${oc.title || 'Overcharge & Tariff Violation Audit'}</h3>
                     </div>
-                    <span class="text-[0.72rem] text-gray-500 font-mono">Analyzed by ${modelUsed}</span>
+                    <span style="font-size:0.75rem;color:rgba(255,255,255,0.85);font-family:var(--f-mono);">Analyzed by ${modelUsed}</span>
                 </div>
-                <div class="mb-4">
-                    <h5 class="text-[0.78rem] font-semibold text-gray-400 uppercase tracking-wider mb-1">Plain-English Finding Explanation</h5>
-                    <p class="text-[0.86rem] text-gray-200 leading-relaxed">${oc.plain_english_explanation}</p>
+                <div style="margin-bottom:18px;">
+                    <p style="font-size:0.88rem;color:#ffffff;line-height:1.6;margin:0;">${oc.plain_english_explanation}</p>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-4 mb-4 max-lg:grid-cols-1">
-                    <div class="p-4 bg-surface border border-border-subtle rounded-lg">
-                        <h5 class="text-[0.78rem] font-semibold text-yellow-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;" class="max-lg:grid-cols-1">
+                    <div style="padding:16px;background:#ffffff;border-radius:10px;color:#181d26;">
+                        <h5 style="font-size:0.78rem;font-weight:700;color:#aa2d00;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                             Root-Cause Analysis
                         </h5>
-                        <p class="text-[0.82rem] text-gray-300 leading-relaxed">${oc.root_cause_analysis}</p>
+                        <p style="font-size:0.82rem;color:#333840;line-height:1.55;margin:0;">${oc.root_cause_analysis}</p>
                     </div>
-                    <div class="p-4 bg-surface border border-border-subtle rounded-lg">
-                        <h5 class="text-[0.78rem] font-semibold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                    <div style="padding:16px;background:#ffffff;border-radius:10px;color:#181d26;">
+                        <h5 style="font-size:0.78rem;font-weight:700;color:#0a2e0e;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
                             Finance Team Action Plan
                         </h5>
-                        <ul class="space-y-2 list-none p-0">${stepsList}</ul>
+                        <ul style="list-style:none;padding:0;margin:0;">${stepsList}</ul>
                     </div>
                 </div>
 
                 ${evidenceCards ? `
-                <div class="mb-4">
-                    <h5 class="text-[0.74rem] font-semibold text-gray-400 uppercase tracking-wider mb-2">Supporting Reconciliation Evidence</h5>
-                    <div class="grid grid-cols-4 gap-2.5 max-md:grid-cols-2">${evidenceCards}</div>
+                <div style="margin-bottom:18px;">
+                    <div style="font-size:0.74rem;font-weight:600;color:rgba(255,255,255,0.85);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Supporting Reconciliation Evidence</div>
+                    <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;" class="max-md:grid-cols-2">${evidenceCards}</div>
                 </div>` : ''}
 
                 ${oc.dispute_email_draft ? `
-                <div class="mt-4 pt-4 border-t border-border-subtle">
-                    <details class="group bg-surface/50 border border-border-medium rounded-lg transition-all">
-                        <summary class="px-4 py-3 cursor-pointer text-[0.84rem] font-semibold text-gray-200 flex items-center justify-between hover:text-emerald-400">
-                            <span class="flex items-center gap-2">
+                <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.25);">
+                    <details class="group" style="background:#f5e9d4;border:1px solid #ebd9be;border-radius:10px;overflow:hidden;">
+                        <summary style="padding:14px 18px;cursor:pointer;font-size:0.85rem;font-weight:600;color:#181d26;display:flex;align-items:center;justify-content:space-between;background:#f5e9d4;outline:none;">
+                            <span style="display:flex;align-items:center;gap:8px;">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                                 Ready-to-Send Gateway Dispute Letter Draft (Click to Expand)
                             </span>
-                            <span class="text-xs text-gray-500 group-open:rotate-180 transition-transform">&darr;</span>
+                            <span style="font-size:0.8rem;color:#75758a;">&darr;</span>
                         </summary>
-                        <div class="p-4 border-t border-border-subtle text-xs space-y-3">
-                            <div class="flex justify-between items-center text-gray-400 pb-2 border-b border-border-subtle">
-                                <div><strong>To:</strong> ${oc.dispute_email_draft.recipient || 'Gateway A Merchant Support'}</div>
-                                <button onclick="copyDisputeEmail()" id="btnCopyEmail" class="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded hover:bg-emerald-500/30 font-medium transition-all">
+                        <div style="padding:16px;border-top:1px solid #ebd9be;background:#ffffff;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid #eeeeee;">
+                                <div style="font-size:0.82rem;color:#41454d;"><strong>To:</strong> ${oc.dispute_email_draft.recipient || 'Gateway A Merchant Support'}</div>
+                                <button type="button" onclick="copyDisputeEmail()" id="btnCopyEmail" class="btn-primary" style="padding:6px 14px;font-size:0.75rem;">
                                     Copy Letter to Clipboard
                                 </button>
                             </div>
-                            <div class="text-gray-300"><strong>Subject:</strong> <span id="disputeEmailSubject">${oc.dispute_email_draft.subject}</span></div>
-                            <pre id="disputeEmailBody" class="font-sans whitespace-pre-wrap text-[0.82rem] text-gray-300 bg-surface-card p-3 rounded border border-border-subtle leading-relaxed">${oc.dispute_email_draft.body}</pre>
+                            <div style="font-size:0.82rem;color:#181d26;margin-bottom:8px;"><strong>Subject:</strong> <span id="disputeEmailSubject">${oc.dispute_email_draft.subject}</span></div>
+                            <pre id="disputeEmailBody" style="background:#f8fafc;color:#181d26;border:1px solid #dddddd;border-radius:8px;padding:14px;font-family:var(--f-mono);font-size:0.8rem;line-height:1.6;white-space:pre-wrap;margin:0;">${oc.dispute_email_draft.body}</pre>
                         </div>
                     </details>
                 </div>` : ''}
@@ -969,34 +968,34 @@ function renderAINarratives(aiData) {
         `;
     }
 
-    // 3. Savings Model Banner
+    // 3. Savings Model Banner — Full-Bleed Signature Forest Card
     const savEl = document.getElementById('aiSavingsBanner');
     if (savEl && route.plain_english_explanation) {
         const roadmapItems = (route.implementation_roadmap || []).map(r => `
-            <div class="p-3 bg-surface border border-border-subtle rounded-lg">
-                <div class="text-[0.74rem] font-bold text-emerald-400 uppercase tracking-wider mb-1">${r.phase}</div>
-                <div class="text-[0.82rem] text-gray-300 leading-relaxed">${r.actions}</div>
+            <div style="padding:14px;background:#ffffff;border-radius:8px;color:#181d26;">
+                <div style="font-size:0.74rem;font-weight:700;color:#0a2e0e;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">${r.phase}</div>
+                <div style="font-size:0.82rem;color:#333840;line-height:1.5;">${r.actions}</div>
             </div>
         `).join('');
 
         savEl.innerHTML = `
-            <div class="p-6 bg-surface-card border border-emerald-500/30 rounded-xl mb-5 shadow-lg">
-                <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[0.68rem] font-bold uppercase tracking-wider bg-emerald-400/15 text-emerald-400 border border-emerald-400/30">AI Strategy</span>
-                        <h3 class="text-[1.02rem] font-bold text-gray-100">${route.title || 'Smart Gateway Routing Arbitrage'}</h3>
+            <div class="signature-forest-card" style="margin-bottom:24px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span class="chip" style="background:#ffffff;color:#0a2e0e;border-color:rgba(255,255,255,0.4);font-weight:700;">AI Strategy</span>
+                        <h3 style="font-size:1.25rem;font-weight:500;color:#ffffff;margin:0;">${route.title || 'Smart Gateway Routing Arbitrage'}</h3>
                     </div>
-                    <span class="text-[0.72rem] text-emerald-400 font-bold">Potential: ₹8.51L / month</span>
+                    <span style="font-size:0.82rem;color:#a8d8c4;font-weight:600;font-family:var(--f-mono);">Potential: ₹8.51L / month</span>
                 </div>
-                <p class="text-[0.86rem] text-gray-200 leading-relaxed mb-4">${route.plain_english_explanation}</p>
-                <div class="p-4 bg-surface border border-border-subtle rounded-lg mb-4">
-                    <h5 class="text-[0.78rem] font-semibold text-yellow-400 uppercase tracking-wider mb-1">Operational Trade-offs & Failure Risk Analysis</h5>
-                    <p class="text-[0.82rem] text-gray-300 leading-relaxed">${route.root_cause_and_tradeoffs}</p>
+                <p style="font-size:0.88rem;color:#ffffff;line-height:1.6;margin:0 0 16px 0;">${route.plain_english_explanation}</p>
+                <div style="padding:16px;background:#ffffff;border-radius:10px;margin-bottom:16px;color:#181d26;">
+                    <h5 style="font-size:0.78rem;font-weight:700;color:#aa2d00;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Operational Trade-offs & Failure Risk Analysis</h5>
+                    <p style="font-size:0.82rem;color:#333840;line-height:1.55;margin:0;">${route.root_cause_and_tradeoffs}</p>
                 </div>
                 ${roadmapItems ? `
                 <div>
-                    <h5 class="text-[0.74rem] font-semibold text-gray-400 uppercase tracking-wider mb-2">Phased Execution Roadmap</h5>
-                    <div class="grid grid-cols-3 gap-3 max-md:grid-cols-1">${roadmapItems}</div>
+                    <div style="font-size:0.74rem;font-weight:600;color:rgba(255,255,255,0.85);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Phased Execution Roadmap</div>
+                    <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;" class="max-md:grid-cols-1">${roadmapItems}</div>
                 </div>` : ''}
             </div>
         `;
@@ -1006,70 +1005,70 @@ function renderAINarratives(aiData) {
     const fullAuditEl = document.getElementById('aiFullAuditContainer');
     if (fullAuditEl) {
         const stratRecs = (exec.strategic_recommendations || []).map(s => `
-            <div class="p-4 bg-surface-card border border-border-subtle rounded-xl flex items-start gap-3">
-                <span class="w-6 h-6 rounded-full bg-emerald-400/15 text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">#${s.priority}</span>
-                <div class="flex-1">
-                    <div class="text-[0.9rem] font-semibold text-gray-100 mb-1">${s.action}</div>
-                    <div class="text-[0.82rem] text-gray-400 leading-relaxed mb-2">${s.rationale}</div>
-                    <div class="text-[0.75rem] font-mono font-medium text-emerald-400 bg-emerald-400/10 inline-block px-2 py-0.5 rounded">Benefit: ${s.financial_benefit}</div>
+            <div style="padding:16px;background:#ffffff;border:1px solid #dddddd;border-radius:10px;display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;">
+                <span style="width:26px;height:26px;border-radius:50%;background:#0a2e0e;color:#ffffff;font-weight:700;font-size:0.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">#${s.priority}</span>
+                <div style="flex:1;">
+                    <div style="font-size:0.92rem;font-weight:600;color:var(--c-ink);margin-bottom:4px;">${s.action}</div>
+                    <div style="font-size:0.82rem;color:#41454d;line-height:1.55;margin-bottom:8px;">${s.rationale}</div>
+                    <div style="font-size:0.75rem;font-family:var(--f-mono);font-weight:600;color:#0a2e0e;background:#edfce9;border:1px solid #a8d8c4;display:inline-block;padding:2px 8px;border-radius:4px;">Benefit: ${s.financial_benefit}</div>
                 </div>
             </div>
         `).join('');
 
         const treasuryRecs = (fx.recommended_treasury_actions || []).map((t, idx) => `
-            <li class="flex items-start gap-2 text-[0.82rem] text-gray-300">
-                <span class="w-5 h-5 rounded-full bg-blue-400/10 text-blue-400 flex items-center justify-center shrink-0 text-[0.7rem] font-bold mt-0.5">${idx + 1}</span>
+            <li style="display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;color:#333840;margin-bottom:8px;">
+                <span style="width:20px;height:20px;border-radius:50%;background:#1b61c9;color:#ffffff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;font-weight:700;margin-top:2px;">${idx + 1}</span>
                 <span>${t}</span>
             </li>
         `).join('');
 
         fullAuditEl.innerHTML = `
-            <div class="mb-6 flex items-center justify-between flex-wrap gap-4 pb-4 border-b border-border-subtle">
+            <div style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;padding-bottom:16px;border-bottom:1px solid #dddddd;">
                 <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="px-2 py-0.5 rounded text-[0.7rem] font-bold uppercase tracking-wider bg-emerald-400/15 text-emerald-400 border border-emerald-400/30">AI Financial Audit</span>
-                        <span class="text-[0.75rem] text-gray-400 font-mono">Generated: ${new Date(AI_DATA.generated_at).toLocaleString('en-IN')}</span>
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                        <span class="chip" style="background:#0a2e0e;color:#ffffff;border-color:#0a2e0e;font-weight:600;">AI Financial Audit</span>
+                        <span style="font-size:0.75rem;color:#75758a;font-family:var(--f-mono);">Generated: ${new Date(AI_DATA.generated_at).toLocaleString('en-IN')}</span>
                     </div>
-                    <h2 class="text-xl font-bold tracking-tight text-gray-100">LLM-Driven Payment & Tax Intelligence Audit</h2>
-                    <p class="text-[0.85rem] text-gray-400 mt-1">Plain-English diagnostic narratives, root-cause deductions, and dispute recovery workflows powered by ${modelUsed}.</p>
+                    <h2 style="font-size:1.6rem;font-weight:500;color:var(--c-ink);letter-spacing:-0.01em;margin:0;">LLM-Driven Payment &amp; Tax Intelligence Audit</h2>
+                    <p style="font-size:0.85rem;color:#41454d;margin-top:4px;">Plain-English diagnostic narratives, root-cause deductions, and dispute recovery workflows powered by ${modelUsed}.</p>
                 </div>
-                <button onclick="window.print()" class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition-all flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                <button type="button" onclick="window.print()" class="btn-secondary" style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;padding:8px 16px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                     Print Audit Report
                 </button>
             </div>
 
             <!-- Executive Summary Card -->
-            <div class="p-6 bg-surface-card border border-border-subtle rounded-xl mb-6 shadow-lg">
-                <h3 class="text-[1.1rem] font-bold text-emerald-400 mb-2">${exec.headline || 'Executive Briefing'}</h3>
-                <p class="text-[0.88rem] text-gray-200 leading-relaxed mb-6">${exec.plain_english_summary || ''}</p>
+            <div class="card" style="margin-bottom:24px;padding:28px;">
+                <h3 style="font-size:1.2rem;font-weight:600;color:#0a2e0e;margin-bottom:8px;">${exec.headline || 'Executive Briefing'}</h3>
+                <p style="font-size:0.88rem;color:#333840;line-height:1.6;margin-bottom:24px;">${exec.plain_english_summary || ''}</p>
                 
-                <h4 class="text-[0.82rem] font-bold text-gray-300 uppercase tracking-wider mb-3">Strategic Priorities for Leadership</h4>
-                <div class="grid grid-cols-1 gap-3 mb-4">${stratRecs}</div>
+                <h4 style="font-size:0.82rem;font-weight:700;color:#41454d;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;">Strategic Priorities for Leadership</h4>
+                <div>${stratRecs}</div>
             </div>
 
             <!-- FX & Treasury Float Card -->
-            <div class="p-6 bg-surface-card border border-border-subtle rounded-xl mb-6 shadow-lg">
-                <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-                    <h3 class="text-[1.05rem] font-bold text-gray-100 flex items-center gap-2">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5b8af5" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            <div class="card" style="margin-bottom:24px;padding:28px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+                    <h3 style="font-size:1.15rem;font-weight:600;color:var(--c-ink);display:flex;align-items:center;gap:8px;margin:0;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1b61c9" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
                         ${fx.title || 'Cross-Border FX & Working Capital Velocity Audit'}
                     </h3>
-                    <span class="text-[0.72rem] text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/20 font-semibold">Treasury Impact</span>
+                    <span class="chip" style="background:#eff6ff;color:#1b61c9;border-color:#bfdbfe;font-weight:600;">Treasury Impact</span>
                 </div>
                 <div class="grid grid-cols-2 gap-5 mb-5 max-lg:grid-cols-1">
-                    <div class="p-4 bg-surface border border-border-subtle rounded-lg">
-                        <h5 class="text-[0.78rem] font-semibold text-blue-400 uppercase tracking-wider mb-2">Cross-Border FX Markup Impact</h5>
-                        <p class="text-[0.84rem] text-gray-200 leading-relaxed">${fx.fx_markup_explanation || ''}</p>
+                    <div style="padding:16px;background:#f8fafc;border:1px solid #dddddd;border-radius:10px;">
+                        <h5 style="font-size:0.78rem;font-weight:700;color:#1b61c9;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Cross-Border FX Markup Impact</h5>
+                        <p style="font-size:0.84rem;color:#333840;line-height:1.6;margin:0;">${fx.fx_markup_explanation || ''}</p>
                     </div>
-                    <div class="p-4 bg-surface border border-border-subtle rounded-lg">
-                        <h5 class="text-[0.78rem] font-semibold text-purple-400 uppercase tracking-wider mb-2">Working Capital Float & Liquidity</h5>
-                        <p class="text-[0.84rem] text-gray-200 leading-relaxed">${fx.working_capital_impact || ''}</p>
+                    <div style="padding:16px;background:#f8fafc;border:1px solid #dddddd;border-radius:10px;">
+                        <h5 style="font-size:0.78rem;font-weight:700;color:#254fad;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Working Capital Float &amp; Liquidity</h5>
+                        <p style="font-size:0.84rem;color:#333840;line-height:1.6;margin:0;">${fx.working_capital_impact || ''}</p>
                     </div>
                 </div>
                 <div>
-                    <h5 class="text-[0.78rem] font-semibold text-gray-300 uppercase tracking-wider mb-2">Recommended Treasury Actions</h5>
-                    <ul class="space-y-2 list-none p-0">${treasuryRecs}</ul>
+                    <h5 style="font-size:0.78rem;font-weight:700;color:#41454d;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Recommended Treasury Actions</h5>
+                    <ul style="list-style:none;padding:0;margin:0;">${treasuryRecs}</ul>
                 </div>
             </div>
         `;
@@ -1085,15 +1084,210 @@ function copyDisputeEmail() {
         if (btn) {
             const orig = btn.innerText;
             btn.innerText = 'Copied to Clipboard!';
-            btn.classList.add('bg-emerald-500', 'text-black');
+            btn.style.background = '#0a2e0e';
+            btn.style.color = '#ffffff';
             setTimeout(() => {
                 btn.innerText = orig;
-                btn.classList.remove('bg-emerald-500', 'text-black');
+                btn.style.background = '';
+                btn.style.color = '';
             }, 2500);
         }
     }).catch(err => {
         alert('Could not copy automatically. Please select and copy manually.');
     });
+}
+
+// ============================================================
+// Render: Executive Summary (Editorial Long-Form Pacing)
+// ============================================================
+function renderExecutive() {
+    const gA = DATA.overview?.gatewayA;
+    const gB = DATA.overview?.gatewayB;
+    const sm = DATA.savings_model || { items: [] };
+    const oc = DATA.overcharges || { count: 0, total_overcharge: 0 };
+    const recon = DATA.reconciliation || { total_mismatches: 0, total_fee_diff: 0 };
+    const hasA = DATA.has_gateway_a !== false && gA && gA.total_volume > 0;
+    const hasB = DATA.has_gateway_b !== false && gB && gB.total_volume > 0;
+
+    const totalVol = (gA?.total_volume || 0) + (gB?.total_volume || 0);
+    const totalCharges = (gA?.total_charges || 0) + (gB?.total_charges || 0);
+    const blendedRate = totalVol > 0 ? (totalCharges / totalVol * 100) : 0;
+
+    let gatewayVolumeItems = '';
+    if (hasA && hasB) {
+        gatewayVolumeItems = `
+            <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                Gateway A: ${fmtCurrency(gA.total_volume)} at <strong style="color:#0a2e0e;">${fmtPct(gA.effective_rate)}</strong> effective rate
+            </li>
+            <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                Gateway B: ${fmtCurrency(gB.total_volume)} at <strong style="color:#1b61c9;">${fmtPct(gB.effective_rate)}</strong> effective rate — <strong style="color:#aa2d00;">${fmtPct(gB.effective_rate - gA.effective_rate)} higher</strong> than Gateway A
+            </li>
+        `;
+    } else if (hasA) {
+        gatewayVolumeItems = `
+            <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                Gateway A (Master Enriched Table): ${fmtCurrency(gA.total_volume)} at <strong style="color:#0a2e0e;">${fmtPct(gA.effective_rate)}</strong> effective rate
+            </li>
+            <li style="padding-left:18px;position:relative;color:#75758a;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                Gateway B: Not active. (Upload Gateway B consolidated file to unlock comparative analytics)
+            </li>
+        `;
+    } else if (hasB) {
+        gatewayVolumeItems = `
+            <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                Gateway B (Consolidated Ledger): ${fmtCurrency(gB.total_volume)} at <strong style="color:#1b61c9;">${fmtPct(gB.effective_rate)}</strong> effective rate
+            </li>
+            <li style="padding-left:18px;position:relative;color:#75758a;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                Gateway A: Not active. (Upload Gateway A split files to unlock comparative analytics)
+            </li>
+        `;
+    }
+
+    let settlementItems = '';
+    if (hasA && hasB) {
+        settlementItems = `
+            <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                Gateway A average settlement: <strong>${gA.avg_settlement_days}&nbsp;days</strong> (range: ${gA.min_settlement_days}–${gA.max_settlement_days}&nbsp;days)
+            </li>
+            <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                Gateway B average settlement: <strong>${gB.avg_settlement_days}&nbsp;days</strong> (range: ${gB.min_settlement_days}–${gB.max_settlement_days}&nbsp;days)
+            </li>
+            <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                ${gA.avg_settlement_days < gB.avg_settlement_days ? 'Gateway A settles faster' : 'Gateway B settles faster'} — cash flow advantage of <strong>${Math.abs(gA.avg_settlement_days - gB.avg_settlement_days).toFixed(1)}&nbsp;days</strong>
+            </li>
+        `;
+    } else if (hasA) {
+        settlementItems = `
+            <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                Gateway A average settlement: <strong>${gA.avg_settlement_days}&nbsp;days</strong> (range: ${gA.min_settlement_days}–${gA.max_settlement_days}&nbsp;days)
+            </li>
+        `;
+    } else if (hasB) {
+        settlementItems = `
+            <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                Gateway B average settlement: <strong>${gB.avg_settlement_days}&nbsp;days</strong> (range: ${gB.min_settlement_days}–${gB.max_settlement_days}&nbsp;days)
+            </li>
+        `;
+    }
+
+    const execContainer = document.getElementById('execSummary');
+    if (execContainer) {
+        execContainer.innerHTML = `
+            <h2 style="font-size:2rem;font-weight:400;color:var(--c-ink);letter-spacing:-0.02em;margin-bottom:6px;text-wrap:balance;">Payment Gateway Intelligence Brief</h2>
+            <p style="font-size:0.88rem;color:#75758a;margin-bottom:32px;">Executive Summary · ${DATA.period || ''} · Generated ${new Date(DATA.generated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+
+            <div style="margin-bottom:28px;">
+                <h3 style="font-size:1.1rem;font-weight:600;color:var(--c-ink);padding-bottom:8px;border-bottom:1px solid #dddddd;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#0a2e0e;display:inline-block;" aria-hidden="true"></span>
+                    Volume &amp; Cost Overview
+                </h3>
+                <ul style="list-style:none;padding:0;margin:0;">
+                    <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                        <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                        Total processed volume: <strong style="color:var(--c-ink);">${fmtCurrency(totalVol)}</strong> across <strong style="color:var(--c-ink);">${fmt((gA?.txn_count || 0) + (gB?.txn_count || 0))}</strong> transactions
+                    </li>
+                    <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                        <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                        Total gateway charges: <strong style="color:var(--c-ink);">${fmtCurrency(totalCharges)}</strong> (blended rate: <strong style="color:var(--c-ink);">${fmtPct(blendedRate)}</strong>)
+                    </li>
+                    ${gatewayVolumeItems}
+                </ul>
+            </div>
+
+            <div style="margin-bottom:28px;">
+                <h3 style="font-size:1.1rem;font-weight:600;color:var(--c-ink);padding-bottom:8px;border-bottom:1px solid #dddddd;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#1b61c9;display:inline-block;" aria-hidden="true"></span>
+                    Settlement Performance
+                </h3>
+                <ul style="list-style:none;padding:0;margin:0;">
+                    ${settlementItems}
+                </ul>
+            </div>
+
+            <div style="margin-bottom:28px;">
+                <h3 style="font-size:1.1rem;font-weight:600;color:var(--c-ink);padding-bottom:8px;border-bottom:1px solid #dddddd;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#aa2d00;display:inline-block;" aria-hidden="true"></span>
+                    Issues &amp; Recovery
+                </h3>
+                <ul style="list-style:none;padding:0;margin:0;">
+                    <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                        <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                        <strong style="color:#aa2d00;">${fmt(oc.count || 0)} overcharged transactions</strong> detected on Gateway A, totaling <strong style="color:#aa2d00;">${fmtCurrency(oc.total_overcharge || 0)}</strong> recoverable
+                    </li>
+                    <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                        <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                        <strong style="color:#d9a441;">${fmt(recon.total_mismatches || 0)} reconciliation mismatches</strong> between payment and transaction records
+                    </li>
+                    <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                        <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                        Gateway A failure rate: <strong>${fmtPct(DATA.failed_transactions?.gatewayA?.failure_rate || 0)}</strong> (${fmt(DATA.failed_transactions?.gatewayA?.count || 0)} of ${fmt(DATA.failed_transactions?.gatewayA?.total || 0)})
+                    </li>
+                    <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                        <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                        Gateway B standalone fees (non-transaction): <strong>${fmtCurrency(gB?.standalone_fees || 0)}</strong>
+                    </li>
+                </ul>
+            </div>
+
+            <div style="margin-bottom:28px;">
+                <h3 style="font-size:1.1rem;font-weight:600;color:var(--c-ink);padding-bottom:8px;border-bottom:1px solid #dddddd;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#0a2e0e;display:inline-block;" aria-hidden="true"></span>
+                    Savings Opportunity
+                </h3>
+                <ul style="list-style:none;padding:0;margin:0;">
+                    <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                        <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                        Monthly savings from optimal routing: <strong style="color:#0a2e0e;">${fmtCurrency(sm.total_potential_saving)}</strong>
+                    </li>
+                    <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                        <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                        Annualized: <strong style="color:#0a2e0e;">${fmtCurrency(sm.total_potential_saving * 12)}</strong>
+                    </li>
+                    ${(sm.items || []).map(s => `
+                    <li style="padding-left:18px;position:relative;color:#333840;font-size:0.9rem;line-height:1.65;margin-bottom:6px;">
+                        <span style="position:absolute;left:0;color:#75758a;" aria-hidden="true">&rarr;</span>
+                        ${s.network}: route to <strong>${s.cheapest_gateway}</strong> (${fmtPct(Math.min(s.gateway_a_rate, s.gateway_b_rate))} vs ${fmtPct(Math.max(s.gateway_a_rate, s.gateway_b_rate))}) — saves <strong style="color:#0a2e0e;">${fmtCurrency(s.potential_saving)}</strong>/mo
+                    </li>`).join('')}
+                </ul>
+            </div>
+
+            <div style="margin-bottom:28px;">
+                <h3 style="font-size:1.1rem;font-weight:600;color:var(--c-ink);padding-bottom:8px;border-bottom:1px solid #dddddd;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#d9a441;display:inline-block;" aria-hidden="true"></span>
+                    Recommended Actions
+                </h3>
+                <div class="grid grid-cols-2 gap-4 mt-3 max-lg:grid-cols-1">
+                    <div class="card" style="padding:20px;">
+                        <h4 style="font-size:0.92rem;font-weight:600;color:#aa2d00;margin-bottom:6px;">1. Recover Overcharges</h4>
+                        <p style="font-size:0.82rem;color:#41454d;line-height:1.55;margin:0;">File claims for ${fmtCurrency(oc.total_overcharge)} in overcharges on ${fmt(oc.count)} Gateway A transactions that exceeded contracted rates.</p>
+                    </div>
+                    <div class="card" style="padding:20px;">
+                        <h4 style="font-size:0.92rem;font-weight:600;color:#0a2e0e;margin-bottom:6px;">2. Implement Smart Routing</h4>
+                        <p style="font-size:0.82rem;color:#41454d;line-height:1.55;margin:0;">Route each card network to its cheapest gateway to save ${fmtCurrency(sm.total_potential_saving)}/month (${fmtCurrency(sm.total_potential_saving * 12)}/year).</p>
+                    </div>
+                    <div class="card" style="padding:20px;">
+                        <h4 style="font-size:0.92rem;font-weight:600;color:#1b61c9;margin-bottom:6px;">3. Renegotiate Gateway B Rates</h4>
+                        <p style="font-size:0.82rem;color:#41454d;line-height:1.55;margin:0;">Gateway B's ${fmtPct(gB?.effective_rate || 0)} blended rate is ${fmtPct((gB?.effective_rate || 0) - (gA?.effective_rate || 0))} above Gateway A. Negotiate toward parity using volume leverage.</p>
+                    </div>
+                    <div class="card" style="padding:20px;">
+                        <h4 style="font-size:0.92rem;font-weight:600;color:#d9a441;margin-bottom:6px;">4. Resolve Reconciliation Gaps</h4>
+                        <p style="font-size:0.82rem;color:#41454d;line-height:1.55;margin:0;">Investigate ${fmt(recon.total_mismatches || 0)} mismatches between payment and settlement records. Total fee discrepancy: ${fmtCurrency(recon.total_fee_diff || 0)}.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 }
 
 // ============================================================
@@ -1114,22 +1308,22 @@ function renderAll(data) {
 
     if (window.AI_DATA) {
         AI_DATA = window.AI_DATA;
-        renderAINarratives();
+        renderAINarratives(window.AI_DATA);
     }
 }
 
 function renderEmptyState() {
     const emptyHtml = `
-        <div style="background:#ffffff;border:2px dashed #cbd5e1;border-radius:14px;padding:48px 24px;text-align:center;margin:20px 0;width:100%;grid-column:1/-1;">
-            <div style="width:48px;height:48px;border-radius:50%;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <div style="background:#ffffff;border:1px dashed #dddddd;border-radius:12px;padding:56px 24px;text-align:center;margin:20px 0;width:100%;grid-column:1/-1;">
+            <div style="width:52px;height:52px;border-radius:50%;background:#f8fafc;border:1px solid #dddddd;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#181d26" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             </div>
-            <h3 style="font-family:var(--f-display);font-size:1.15rem;font-weight:700;color:#0f172a;margin-bottom:8px;">No Dataset Loaded</h3>
-            <p style="font-size:0.85rem;color:#64748b;max-width:440px;margin:0 auto 20px;line-height:1.5;">
-                Data is not loaded from disk. Please select your 4 Excel files in the <strong>Upload Data</strong> tab and click <strong>Process Files</strong> to dynamically compute and view analytics.
+            <h3 style="font-size:1.25rem;font-weight:500;color:#181d26;margin-bottom:8px;letter-spacing:-0.01em;">No Gateway Dataset Loaded</h3>
+            <p style="font-size:0.88rem;color:#75758a;max-width:480px;margin:0 auto 24px;line-height:1.55;">
+                Load or upload your gateway transaction and settlement files in the <strong>Upload Data</strong> studio to build Master Enriched Tables and generate AI insights.
             </p>
-            <button onclick="document.querySelector('[data-section=\\'upload\\']')?.click()" style="padding:10px 24px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
-                Go to Upload Data →
+            <button type="button" onclick="document.querySelector('[data-section=\\'upload\\']')?.click()" class="btn-primary" style="padding:12px 24px;">
+                Go to Upload Data &rarr;
             </button>
         </div>
     `;
@@ -1149,23 +1343,30 @@ function renderEmptyState() {
 async function init() {
     initNav();
 
+    const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
+    if (hash.startsWith('v-')) {
+        if (typeof switchModule === 'function') switchModule('module-vendor');
+        return;
+    }
+
     if (window.DATA) {
         renderAll(window.DATA);
     } else {
-        // Start completely empty!
         renderEmptyState();
-
-        // Default view to the Upload Data section
-        const uploadNav = document.querySelector('[data-section="upload"]');
-        if (uploadNav && (!window.location.hash || window.location.hash === '#dashboard' || window.location.hash === '#upload')) {
+        const uploadNav = document.querySelector('#nav-module-gateway [data-section="upload"]');
+        if (uploadNav && (!hash || hash === 'dashboard' || hash === 'upload')) {
             uploadNav.click();
         }
     }
 }
 
+window.kpiCard = kpiCard;
+window.buildTable = buildTable;
+window.makeChart = makeChart;
+window.drawTimeseries = drawTimeseries;
 window.renderAll = renderAll;
 window.renderAINarratives = renderAINarratives;
 window.renderEmptyState = renderEmptyState;
+window.copyDisputeEmail = copyDisputeEmail;
+
 document.addEventListener('DOMContentLoaded', init);
-
-

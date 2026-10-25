@@ -1,0 +1,24 @@
+# Environment & Secrets
+.env
+*.env
+*.key
+
+# Python virtual environment & cache
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# Operating system / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Scratch & temporary uploads
+scratch/
+temp_*.json
+temp_*.xlsx
+temp_*.csv

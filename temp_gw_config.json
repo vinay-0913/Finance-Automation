@@ -3,9 +3,9 @@
     {
       "name": "Gateway A",
       "files": [
-        "C:\\Users\\vinay\\AppData\\Local\\Temp\\payanalytics_upload_n2elm1_m\\GatewayA_payments_Sep26_dummy.xlsx",
-        "C:\\Users\\vinay\\AppData\\Local\\Temp\\payanalytics_upload_n2elm1_m\\GatewayA_refunds_Sep26_dummy.xlsx",
-        "C:\\Users\\vinay\\AppData\\Local\\Temp\\payanalytics_upload_n2elm1_m\\GatewayA_transactions_Sep26_dummy.xlsx"
+        "C:\\Users\\vinay\\AppData\\Local\\Temp\\payanalytics_upload_2jq1jnp0\\GatewayA_payments_Sep26_dummy.xlsx",
+        "C:\\Users\\vinay\\AppData\\Local\\Temp\\payanalytics_upload_2jq1jnp0\\GatewayA_refunds_Sep26_dummy.xlsx",
+        "C:\\Users\\vinay\\AppData\\Local\\Temp\\payanalytics_upload_2jq1jnp0\\GatewayA_transactions_Sep26_dummy.xlsx"
       ],
       "mapping": {
         "payment_key": "id",
@@ -15,7 +15,7 @@
     {
       "name": "Gateway B",
       "files": [
-        "C:\\Users\\vinay\\AppData\\Local\\Temp\\payanalytics_upload_n2elm1_m\\GatewayB_Sep26_dummy.xlsx"
+        "C:\\Users\\vinay\\AppData\\Local\\Temp\\payanalytics_upload_2jq1jnp0\\GatewayB_Sep26_dummy.xlsx"
       ],
       "mapping": {}
     }

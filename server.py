@@ -263,6 +263,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._send_json({"error": "No dataset processed in this session"}, 404)
             return
 
+        if path == "/api/vendor-compliance":
+            vc_path = os.path.join(BASE_DIR, "vendor_compliance_data.json")
+            if os.path.isfile(vc_path):
+                self._send_file(vc_path)
+            else:
+                self._send_json({"error": "Vendor compliance dataset not found"}, 404)
+            return
+
         if path == "/ai_narratives.json":
             if _state.get("ai_narratives"):
                 self._send_json(_state["ai_narratives"])
@@ -296,6 +304,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._handle_upload()
         elif path == "/api/narrate":
             self._handle_narrate()
+        elif path == "/api/vendor-compliance/process":
+            self._handle_vendor_compliance_process()
         else:
             self._send_json({"error": "Unknown endpoint"}, 404)
 
@@ -502,6 +512,36 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         threading.Thread(target=_run, daemon=True).start()
         self._send_json({"ok": True, "message": "AI narrative generation started."})
+
+    def _handle_vendor_compliance_process(self):
+        """Run process_vendor_compliance.py on master compliance datasets."""
+        etl_script = os.path.join(BASE_DIR, "process_vendor_compliance.py")
+        if not os.path.exists(etl_script):
+            self._send_json({"error": "process_vendor_compliance.py not found."}, 404)
+            return
+
+        try:
+            cmd = [sys.executable, etl_script]
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+            if res.returncode != 0:
+                self._send_json({"error": f"ETL failed: {res.stderr}"}, 500)
+                return
+
+            vc_path = os.path.join(BASE_DIR, "vendor_compliance_data.json")
+            if os.path.exists(vc_path):
+                with open(vc_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                self._send_json({
+                    "ok": True,
+                    "message": "Vendor GST & TDS compliance audit completed successfully.",
+                    "summary": data.get("summary"),
+                    "data": data
+                })
+            else:
+                self._send_json({"error": "Output JSON not produced."}, 500)
+        except Exception as e:
+            self._send_json({"error": f"Execution error: {str(e)}"}, 500)
+
 
 def main():
     parser = argparse.ArgumentParser(description="PayAnalytics Server")
