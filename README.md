@@ -1,160 +1,113 @@
-# PayAnalytics & Vendor Compliance Intelligence Platform
+# PayAnalytic : 
 
-A high-performance financial operations and audit automation platform designed for modern finance, accounting, and treasury teams. 
-
-PayAnalytics bridges the gap between raw payment gateway extracts, banking settlements, vendor GST filings, and TDS withholding tax regulations—providing instant reconciliation, automated discrepancy audits, and generative AI executive commentary.
+A lightweight, automated financial operations tool that reconciles payment gateway transactions, audits vendor GST & TDS compliance, and generates AI-powered audit summaries.
 
 ---
 
-## 🌟 Key Modules & Capabilities
+## 📌 About Project
 
-### 1. 💳 Payment Gateway Intelligence (PayAnalytics)
-- **Multi-File Automated Ingestion:** Upload multi-gateway CSVs and Excel files (`GatewayA_payments`, `GatewayA_refunds`, `GatewayA_transactions`, `GatewayB_consolidated`).
-- **Dynamic Schema Inspection:** Automatically identifies schema roles (Consolidated Ledger, Settlement Ledger, Refunds Ledger, Payment Metadata) and candidate join keys (`order_id`, `payment_id`, `balance_transaction_id`).
-- **MDR & Fee Audit:** Computes effective merchant discount rates (MDR), statutory GST on gateway charges, and forex markup leakage.
-- **Settlement Reconciliation Engine:** Reconciles gross charges vs. settled bank amounts, identifying under-settlements, negative settlements, and timing differences.
-- **Cost Savings Simulator:** Highlights potential fee recoveries, surcharge anomalies, and volume discount tier optimizations.
-- **AI Financial Auditor (Gemini 2.5 Flash):** Analyzes audit findings to produce natural-language root-cause explanations, evidence summaries, and executive briefing notes.
+Finance and accounting teams deal with thousands of transactions every month across multiple payment gateways, bank settlement statements, and vendor invoices. Handling this manually in spreadsheets takes hours and leads to missed fees, tax errors, and audit delays.
 
-### 2. 🏛️ Vendor GST & TDS Compliance Intelligence
-- **Vendor Master & Invoice Auditing:** Reconciles vendor invoices against GSTR-2B/2A filings.
-- **TDS Compliance (Sec 194C / 194J / 194Q):** Automatically verifies Section code applicability, PAN validity, withholding thresholds, and lower tax deduction certificates (197).
-- **Executive Risk Scorecard:** Interactive risk tiering (High/Medium/Low compliance risk) across all onboarded vendors.
-- **Exceptions Ledger & Remediation:** Actionable queue to flag ITC (Input Tax Credit) mismatches, missing GST numbers, and pending 206AB non-filers.
-- **Monthly Sign-Off & Hygiene Workflow:** Built-in reviewer sign-off states, exportable cleanup logs, and audit trails.
+**PayAnalytics automates this workflow:**
+- **Finds Gateway Fee Overcharges:** Matches gateway reports against bank payouts to identify under-settlements, fee discrepancies, and hidden charges.
+- **Prevents Tax Penalties & Blocked Credits:** Automatically verifies vendor GST filings (GSTR-2B) and TDS withholding tax rules (Sections 194C, 194J, 194Q, 206AB).
+- **Writes Plain-English Summaries:** Uses Google Gemini AI to turn complex numerical discrepancies into clear executive briefings with recommended action steps.
 
 ---
 
-## 🏗️ Architecture & Tech Stack
+## 🧩 Modules & How It Works
 
-```
-PayAnalytics Platform
-│
-├── Frontend (Client-side)
-│   ├── Vanilla HTML5 / CSS3 (Airtable-inspired Design System, tokens in DESIGN.md)
-│   ├── Vanilla JS (Modular reactive state & view controllers)
-│   ├── Chart.js 4.4.4 (Financial trend charts, breakdown graphs)
-│   └── Offline/Local-first rendering (Data embedded or fetched via REST API)
-│
-├── Backend & ETL Engine (Python)
-│   ├── server.py (Native ThreadingHTTPServer serving UI and REST API)
-│   ├── process_data.py (Pandas/NumPy Gateway reconciliation pipeline)
-│   ├── process_vendor_compliance.py (GST 2B & TDS validation pipeline)
-│   └── ai_narrate.py (Google Gemini API integration for automated commentary)
-│
-└── Data Layer
-    ├── dashboard_data.json (Pre-calculated Payment Gateway dataset)
-    ├── vendor_compliance_data.json (Compiled Vendor GST/TDS ledger)
-    └── ai_narratives.json (Cached AI audit narratives)
-```
+### 1. Payment Gateway Reconciliation
+* **How it works:** You upload transaction, refund, and settlement files (CSV or Excel) from gateways like Razorpay, Stripe, or custom banks. The tool automatically detects column headers, links transactions by order ID, calculates effective gateway charges (MDR), checks applicable GST, and flags settlement differences.
+* **Key Outcome:** Instantly spots fee leaks, incorrect rate tiers, and un-settled funds.
+
+### 2. Vendor GST & TDS Compliance
+* **How it works:** The tool cross-references accounts payable (AP) vendor invoices against government tax records (GSTR-2B) and statutory TDS rules. It validates PAN details, checks TDS rates and thresholds, and checks for non-filers under Section 206AB.
+* **Key Outcome:** Catches invoice discrepancies, prevents loss of Input Tax Credit (ITC), and flags high-risk vendors before payments are released.
+
+### 3. AI Financial Auditor
+* **How it works:** After the calculations finish, the engine passes key variance metrics to Google Gemini. The AI analyzes root causes and writes concise briefings explaining *why* the variances happened and *what to do next*.
+* **Key Outcome:** Delivers ready-to-share summaries for managers and CFOs without writing reports manually.
+
+---
+
+## 🛠️ Tech Stack & Why It's Used
+
+| Technology | Why It's Used |
+|---|---|
+| **Python (3.9+)** | The core programming language used for data automation. It is reliable, fast, and easy to run across any operating system. |
+| **Pandas & NumPy** | Used for high-speed calculation. They join, clean, and reconcile hundreds of thousands of transactions in seconds with exact mathematical accuracy. |
+| **OpenPyXL** | Directly reads and writes multi-tab Excel workbooks (`.xlsx`) exported by banks and ERPs without requiring Microsoft Excel to be installed. |
+| **Python Built-in HTTP Server (`http.server`)** | Serves the web dashboard and REST APIs directly using Python's standard library. Keeps the project lightweight with zero web framework dependencies (no Flask or FastAPI needed). |
+| **Vanilla HTML5, CSS3 & JavaScript** | Built with pure web standards—**no build steps, no Node.js, and no `npm install` needed**. The dashboard loads instantly in any browser and can run completely offline. |
+| **Chart.js** | A fast, lightweight charting library used to render interactive financial charts, trends, and risk scorecards. |
+| **Google Gemini API** | Translates complex numerical findings into plain-English root causes and action items via Python's built-in networking (`urllib`). |
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+- [Python 3.9 or higher](https://www.python.org/downloads/) installed on your computer.
 
-- **Python 3.9+** (Tested on Python 3.10 / 3.11 / 3.12)
-- Modern web browser (Chrome, Edge, Safari, Firefox)
-- *(Optional)* Google Gemini API Key for dynamic AI audit commentary
+---
 
-### 1. Installation
-
-Clone this repository or navigate to the project directory:
-
+### Step 1: Open the Project Directory
 ```bash
 cd "Cutemath Automation"
 ```
 
-Create a virtual environment (recommended):
+---
 
+### Step 2: Create a Virtual Environment (Optional but Recommended)
 ```bash
-# On Windows
+# On Windows:
 py -m venv venv
 venv\Scripts\activate
 
-# On macOS/Linux
+# On macOS / Linux:
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-Install the required Python dependencies:
+---
 
+### Step 3: Install Required Dependencies
 ```bash
-pip install pandas numpy openpyxl
+pip install -r requirements.txt
+```
+*(Only installs `pandas`, `numpy`, and `openpyxl`)*
+
+---
+
+### Step 4: Configure API Key (Optional)
+If you want live AI commentary, create a `.env` file from the example:
+```bash
+# On Windows:
+copy .env.example .env
+
+# On macOS / Linux:
+cp .env.example .env
+```
+Add your Gemini API key inside `.env`:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+*(If skipped, the dashboard works normally and displays pre-computed audit data.)*
+
+---
+
+### Step 5: Start the Server
+```bash
+# On Windows:
+py server.py
+
+# On macOS / Linux:
+python3 server.py
 ```
 
-*(You can also use the included `requirements.txt`)*
+---
 
-### 2. Configure Environment Variables
-
-Create a `.env` file or export your Gemini API key:
-
-```bash
-# Optional: Required only if generating new live AI narratives
-export GEMINI_API_KEY="your-google-gemini-api-key"
-```
-
-### 3. Run the Local Server
-
-Launch the integrated Python server:
-
-```bash
-# On Windows
-py server.py --port 3000
-
-# On macOS/Linux
-python3 server.py --port 3000
-```
-
+### Step 6: View the Dashboard
 Open your browser and navigate to:
-```
-http://localhost:3000
-```
-
----
-
-## 📁 Project Structure
-
-```
-├── index.html                   # Core single-page application interface
-├── app.js                       # Payment Gateway UI controller & state management
-├── vendor_compliance.js         # Vendor GST & TDS scorecard & audit module logic
-├── server.py                    # Lightweight Python HTTP server & API gateway
-│
-├── process_data.py              # Payment gateway reconciliation & MDR calculation ETL
-├── process_vendor_compliance.py # Vendor compliance & withholding tax calculation ETL
-├── ai_narrate.py                # Gemini AI audit insight & narrative generator
-├── build_vendor_compliance_js.py# Script to compile vendor audit data into JS bundle
-│
-├── dashboard_data.json          # Cached payment reconciliation analytics
-├── vendor_compliance_data.json  # Cached vendor compliance audit records
-├── ai_narratives.json           # Cached AI-generated audit commentary
-│
-├── DESIGN.md                    # Visual design specification & theme tokens
-└── README.md                    # Project documentation & deployment guidelines
-```
-
----
-
-## 🔌 API Endpoints Reference
-
-The backend `server.py` exposes the following REST endpoints:
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/` | Serves the main web dashboard (`index.html`) |
-| `POST` | `/api/inspect` | Analyzes uploaded Excel/CSV headers and infers schema role & join keys |
-| `POST` | `/api/upload` | Ingests gateway raw files and executes `process_data.py` |
-| `POST` | `/api/narrate` | Triggers `ai_narrate.py` to regenerate executive summaries via Gemini API |
-| `GET` | `/api/status` | Returns pipeline status, real-time ETL console logs, and completion state |
-| `GET` | `/api/latest-data` | Fetches the latest parsed financial and vendor datasets |
-| `POST` | `/api/vendor-compliance/process` | Executes the vendor compliance validation pipeline |
-
----
-
-## 🔒 Security Best Practices
-
-1. **Protect Sensitive Financial Data:** Never commit live bank statements, PANs, or actual vendor invoice dumps to public repositories.
-2. **Environment Variables:** Store external API credentials (`GEMINI_API_KEY`) strictly in server environment variables or secret vaults.
-3. **Data Retention:** File uploads stored temporarily during processing are kept in temporary operating directories and should be cleaned up automatically after run completion.
+👉 **`http://localhost:3000`**
